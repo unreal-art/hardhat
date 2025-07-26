@@ -1,0 +1,48 @@
+{
+  "include": [
+    "./hardhat.config.ts",
+    "./deploy",
+    "./scripts",
+    "./test",
+    "./utils"
+  ],
+  "compilerOptions": {
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ESNext",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": false,
+    "paths": {},
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "resolveJsonModule": true
+  },
+  "paths": {
+    "@utils/*": [
+      "./utils/*"
+    ],  
+    "$utils/*": [
+      "./utils/*"
+    ],
+    "@test/*": [
+      "./test/*"
+    ],
+    "@scripts/*": [
+      "./scripts/*"
+    ]
+  }
+}

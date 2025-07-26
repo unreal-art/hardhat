@@ -1,0 +1,18 @@
+[profile.default]
+# version = "0.8.21"
+src = "contracts/forge"
+out = "artifacts"
+libs = ["node_modules", "lib"]
+remappings = [
+    "@openzeppelin/=node_modules/@openzeppelin/",
+    "eth-gas-reporter/=node_modules/eth-gas-reporter/",
+    "hardhat-deploy/=node_modules/hardhat-deploy/",
+    "hardhat/=node_modules/hardhat/",
+]
+
+[rpc_endpoints]
+# titanAI = "wss://testnet.skalenodes.com/v1/ws/aware-fake-trim-testnet"
+titanAI = "https://testnet.skalenodes.com/v1/aware-fake-trim-testnet"
+
+
+# See more config options https://github.com/foundry-rs/foundry/tree/master/config

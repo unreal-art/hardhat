@@ -1,0 +1,303 @@
+import { task } from "hardhat/config"
+import "@nomicfoundation/hardhat-toolbox"
+import {
+  getAccount,
+  getAddress,
+  getBalance,
+  getBalanceInEther,
+  getPublicAddress,
+} from "../utils/accounts"
+import { Account } from "../utils/types"
+import { AlchemyProvider, getBigInt, Wallet } from "ethers"
+import Wallet1 from "ethereumjs-wallet"
+import Bluebird from "bluebird"
+import { connectODP, connectERC, connectUnrealToken } from "../utils/web3"
+import { FundOut, Out } from "./account.d"
+import {
+  balanceOfDart,
+  tokenBal,
+  transferEther,
+  transferToken,
+} from "./helpers"
+
+// ----- Tasks -----
+task("balance", "Prints an account's balance")
+  .addPositionalParam("account", "The account's address or private key")
+  .setAction(async (args, hre) => {
+    await hre.run("bal", args)
+  })
+
+task("bal", "Prints an account's balance")
+  .addPositionalParam("account", "The account address or pkey")
+  .setAction(async ({ account }, hre) => {
+    console.log("network", hre.network.name)
+    const address = getAddress(account)
+    const balance = await getBalance(address, hre)
+    const signer = await hre.ethers.getSigner(address)
+    const out = [
+      {
+        account: address,
+        balance: hre.ethers.formatEther(balance),
+        tokenBal: await balanceOfDart(hre, signer, address),
+        nonce: await signer.getNonce("pending"),
+      },
+    ]
+    console.table(out)
+  })
+
+task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
+  const accounts = await hre.ethers.getSigners()
+  console.log("Loading accounts")
+  for (const account of accounts) {
+    const bal = await getBalance(account.address, hre)
+    const balString = hre.ethers.formatEther(bal) + " ETH"
+    console.log("acc", account.address, balString)
+  }
+})
+
+task("account", "Prints account address from private key")
+  .addPositionalParam("privateKey", "The private key")
+  .setAction(async ({ privateKey }, hre) => {
+    const address = getPublicAddress(privateKey, hre)
+    console.log("account:", address)
+  })
+
+task("fund", "Fund, faucet account")
+  .addOptionalPositionalParam("eth", "The Eth drip", ".00001")
+  .addOptionalPositionalParam("dart", "The Dart Drip", "8000")
+  .setAction(async ({ eth, dart }, hre) => {
+    console.log("network", hre.network.name)
+    const whitelistedNetworks = ["localhost"]
+    const networkName = hre.network.name.trim()
+    const amountInWei = hre.ethers.parseEther(eth)
+
+    const fundingAccount = getAccount("admin")
+    const signer = await hre.ethers.getSigner(fundingAccount.address)
+    let nonce = await signer.getNonce()
+
+    const getNonce = (): number | string => {
+      if (whitelistedNetworks.includes(networkName)) return ""
+      const oldNonce = nonce
+      if (eth !== "0") nonce += 1
+      if (dart !== "0") nonce += 1
+      return oldNonce
+    }
+
+    console.log("Funding account:", fundingAccount.address)
+    console.log(
+      "Funding account bal:",
+      await getBalanceInEther(fundingAccount.address, hre)
+    )
+
+    const rcvAccounts: Account[] = [
+      getAccount("solver"),
+      getAccount("resource_provider"),
+      getAccount("job_creator"),
+    ]
+
+    const token = await hre.deployments.get("DartToken")
+    const dartBal = async (address: string) =>
+      await balanceOfDart(hre, signer, address)
+    const ethBal = async (address: string) =>
+      await getBalanceInEther(address, hre)
+
+    let out: Out = {
+      admin: {
+        address: fundingAccount.address,
+        balance: await getBalanceInEther(fundingAccount.address, hre),
+        tokenBal: await dartBal(fundingAccount.address),
+      },
+    }
+
+    let promises: any[] = []
+    for (const acc of rcvAccounts) {
+      const out_: FundOut = {
+        address: acc.address,
+        balance: await ethBal(acc.address),
+        tokenBal: await dartBal(acc.address),
+      }
+      out[acc.name] = out_
+      if (acc.name === "solver") {
+        const accBal = await getBalance(acc.address, hre)
+        const minBalance = hre.ethers.parseEther("0.0001")
+        if (accBal > minBalance) {
+          console.log(
+            `Balance is greater than or equal to ${hre.ethers.formatEther(
+              minBalance
+            )} ETH`
+          )
+          continue
+        } else {
+          console.log("Balance is less than 0.01 ETH")
+          let dripAction = hre.run("drip", {
+            account: acc.address,
+            eth,
+            dart,
+            nonce: getNonce().toString(),
+          })
+          if (whitelistedNetworks.includes(networkName)) {
+            dripAction = await dripAction
+          }
+          promises.push(dripAction)
+        }
+      }
+    }
+
+    await Bluebird.map(
+      promises,
+      async (p) => {
+        await p
+      },
+      { concurrency: rcvAccounts.length }
+    )
+
+    for (const outName in out) {
+      const outI: FundOut = out[outName]
+      outI.newBalance = await ethBal(outI.address)
+      outI.newTokenBal = await dartBal(outI.address)
+    }
+    console.table(out)
+  })
+
+task("drip", "Drip any address")
+  .addPositionalParam("account", "The address or privateKey to drip to")
+  .addOptionalPositionalParam("eth", "The amount to drip", "0.01")
+  .addOptionalPositionalParam("amt", "The token amount to drip", "0")
+  .addOptionalPositionalParam("nonce", "The starting nonce default value")
+  .addOptionalParam("tokenAddress", "The Token address defaults to Unreal")
+  .setAction(
+    async ({ account, eth, amt, nonce: startNonce, tokenAddress }, hre) => {
+      console.log("network", hre.network.name)
+      if (!tokenAddress) {
+        tokenAddress = (await hre.deployments.get("UnrealToken")).address
+      }
+      const token = await connectERC(hre, tokenAddress)
+      const fundingAccount = getAccount("admin")
+      const address = getAddress(account)
+      console.log({ address })
+      const signer = await hre.ethers.getSigner(fundingAccount.address)
+
+      let nonce = startNonce
+        ? Number.parseInt(startNonce)
+        : await signer.getNonce()
+      console.log("nonce", nonce)
+
+      const getNonce = (): number => {
+        nonce += 1
+        return nonce - 1
+      }
+
+      const bal = async (address: string): Promise<string> => {
+        if (amt == 0) return "0"
+        return tokenBal(token, address)
+      }
+
+      const ethBal = async (address: string) =>
+        await getBalanceInEther(address, hre)
+
+      const amountInWei = hre.ethers.parseEther(eth)
+      if (amountInWei == getBigInt(0)) {
+        nonce--
+      }
+
+      let out: Out = {
+        admin: {
+          address: fundingAccount.address,
+          balance: await getBalanceInEther(fundingAccount.address, hre),
+          tokenBal: await bal(fundingAccount.address),
+        },
+      }
+
+      const acc: Account = {
+        name: "dev",
+        address: address,
+      }
+
+      const out_: FundOut = {
+        address: acc.address,
+        balance: await ethBal(acc.address),
+        tokenBal: await bal(acc.address),
+      }
+
+      out[acc.name] = out_
+
+      let promises = [
+        transferEther(acc, amountInWei, hre, signer, getNonce()),
+        transferToken(acc.address, token, hre, amt, getNonce()),
+      ]
+
+      if (hre.network.name == "titanAI") {
+        promises = promises.map(async (p) => await p)
+      }
+
+      const results = await Promise.allSettled(promises)
+      results.forEach((result, index) => {
+        const transferType = index === 0 ? "Ether" : "Dart"
+        if (result.status === "fulfilled") {
+          console.log(`${transferType} successful and returned ${result.value}`)
+        } else {
+          console.error(
+            `${transferType} transfer encountered an error:`,
+            result.reason
+          )
+        }
+      })
+
+      out_.newTokenBal = await bal(acc.address)
+      out_.newBalance = await ethBal(acc.address)
+      out.admin.newBalance = await getBalanceInEther(
+        fundingAccount.address,
+        hre
+      )
+      out.admin.newTokenBal = await bal(fundingAccount.address)
+
+      console.table(out)
+    }
+  )
+
+task("odp", "Drip account's balance")
+  .addPositionalParam("account", "The address or privateKey to drip to")
+  .addPositionalParam("odp", "The amount to drip", "0")
+  .setAction(async ({ odp, account }, hre) => {
+    const tokenContract = await connectODP(hre)
+    await hre.run("drip", {
+      account,
+      amt: odp,
+      tokenAddress: await tokenContract.getAddress(),
+    })
+  })
+
+task("unreal", "Drip account's balance")
+  .addPositionalParam("account", "The address or privateKey to drip to")
+  .addPositionalParam("unreal", "The amount to drip", "0")
+  .setAction(async ({ unreal, account }, hre) => {
+    const tokenContract = await connectUnrealToken(hre)
+    await hre.run("drip", {
+      account,
+      amt: unreal,
+      tokenAddress: await tokenContract.getAddress(),
+    })
+  })
+
+task("new-wallet", "New Wallet, optional drip")
+  .addOptionalPositionalParam("eth", "The amount to drip", "0.01")
+  .addOptionalPositionalParam("dart", "The amount to drip", "10000")
+  .setAction(async ({ eth, dart }, hre) => {
+    console.log("network", hre.network.name)
+    const wallet = Wallet1.generate()
+    const privateKey = wallet.getPrivateKeyString()
+    console.log(`export PRIVATE_KEY=${privateKey}`)
+    await hre.run("drip", { account: privateKey, eth, dart })
+  })
+
+task("tx", "New transaction")
+  .addOptionalParam("tx", "Transaction Hex")
+  .setAction(async ({ tx }, hre) => {
+    if (!tx) {
+      tx =
+        "0xf87380865af3107a4000865af3107a400094823531b7c7843d8c3821b19d70cbfb6173b9cb0288100000000000000080820a95a01db17e4e787b2f3405c8637a5ad73af5337eb396701bba612d486a79350cd4fea02ac53f3964702ccb34fc5d057ae1599bf8fd83f4368979b059dda7a7ba724622"
+    }
+    const alche = new AlchemyProvider({})
+    const receipt = await alche.broadcastTransaction(tx)
+    console.log(receipt)
+  })
