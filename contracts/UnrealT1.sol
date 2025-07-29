@@ -87,6 +87,7 @@ contract UnrealT1 is
         burnEpoch++;
     }
 
+    // FIXME: penialize with Burned Tokens if exist.
     // --- Owner-only: Slash Burn Options ---
     event BurnOptionsSlashed(
         address indexed account,
