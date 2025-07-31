@@ -55,34 +55,12 @@ const config: _Config = {
       saveDeployments: true,
       // deploy: "hardhat",
       chainId: 1337,
-      accounts: [
-        {
-          privateKey:
-            process.env.PRIVATE_KEY ||
-            "beb00ab9be22a34a9c940c27d1d6bfe59db9ab9de4930c968b16724907591b3f",
-          balance: `${1000000000000000000000000n}`,
-        },
-        ...PRIVATE_KEYS.map((privateKey) => {
-          return {
-            privateKey: privateKey,
-            balance: `${1000000000000000000000000n}`,
-          }
-        }),
-      ],
-    },
+      accounts: PRIVATE_KEYS,
     etherlink: {
       forking: {
         url: "https://node.mainnet.etherlink.com",
         blockNumber: 22332526,
-        accounts: {
-          ...PRIVATE_KEYS.map((privateKey) => {
-            return {
-              privateKey: privateKey,
-              balance: `${1000000000000000000000000n}`,
-            }
-          }),
-        },
-      },
+        accounts:PRIVATE_KEYS,
       chainId: 42793,
       accounts: PRIVATE_KEYS,
       saveDeployments: true,
