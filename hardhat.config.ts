@@ -161,7 +161,7 @@ const config: _Config = {
       accounts: PRIVATE_KEYS,
       faucet: ["https://faucet.blocksscan.io"],
     },
-    aurora: {
+    "aurora:testnet": {
       url: "https://testnet.aurora.dev",
       ws: "wss://aurora-testnet.drpc.org",
       chainId: 1313161555,
@@ -171,7 +171,7 @@ const config: _Config = {
       explorer: "https://explorer.testnet.aurora.dev",
       confirmations: 1, //bugfix: for slow
     },
-    etherlink: {
+    "etherlink:testnet": {
       url: "https://node.ghostnet.etherlink.com",
       ws: "wss://aurora-testnet.drpc.org",
       chainId: 1313161555,
