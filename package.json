@@ -5,9 +5,6 @@
   "private": true,
   "description": "Unreal:gas token for AI Compute",
   "author": "Hiro <laciferin@gmail.com>",
-  "resolutions": {
-    "ethers": "^5.7.2"
-  },
   "scripts": {
     "setup": "remixd -i slither",
     "node": "hardhat node",
@@ -87,8 +84,8 @@
     "concurrently": "^8.2.2",
     "dotenv": "^16.6.1",
     "ethereumjs-wallet": "^1.0.2",
-    "ethers": "^5",
-    "ethers6": "npm:ethers@^6.15.0",
+    "ethers": "^6.10.0",
+    "ethers5": "npm:ethers@^5",
     "hardhat": "^2.26.1",
     "hardhat-deploy": "^0.11.45",
     "hardhat-deploy-ethers": "^0.4.2",

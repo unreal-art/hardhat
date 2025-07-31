@@ -1,7 +1,7 @@
 import bluebird from "bluebird"
 import hre, { ethers } from "hardhat"
 
-import { AddressLike, BaseContract, BigNumberish, Signer } from "ethersv6"
+import { AddressLike, BaseContract, BigNumberish, Signer } from "ethers"
 import { Account } from "./types"
 import { ACCOUNTS, getAccount } from "./accounts"
 import { ERC20, UnrealToken } from "../typechain-types"
