@@ -5,6 +5,9 @@
   "private": true,
   "description": "Unreal:gas token for AI Compute",
   "author": "Hiro <laciferin@gmail.com>",
+  "resolutions": {
+    "zksync-web3": "^0.15.4"
+  },
   "scripts": {
     "setup": "remixd -i slither",
     "node": "hardhat node",
