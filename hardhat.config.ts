@@ -62,21 +62,21 @@ const config: _Config = {
 
   networks: {
     hardhat: {
+      forking: {
+        url: "https://node.mainnet.etherlink.com",
+        blockNumber: 22332526,
+      },
       saveDeployments: true,
       // deploy: "hardhat",
       chainId: 1337,
       accounts: genesisAcc,
     },
     etherlink: {
-      forking: {
-        url: "https://node.mainnet.etherlink.com",
-        blockNumber: 22332526,
-      },
-      url: "https://node.mainnet.etherlink.com",
+      url: "http://localhost:8545", // Use localhost when forking
       chainId: 42793,
       accounts: PRIVATE_KEYS,
       saveDeployments: true,
-      confirmations: 0,
+      confirmations: 1,
       fusion: {
         // TODO: add fusion contract addresses here
       },
