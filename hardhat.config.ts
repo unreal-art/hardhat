@@ -21,7 +21,7 @@ import { NetworkUserConfig } from "hardhat/types"
 let NETWORK = process.env.NETWORK || "hardhat"
 const INFURA_KEY = process.env.INFURA_KEY || ""
 
-console.log(`infura key is ${INFURA_KEY}`)
+// console.log(`infura key is ${INFURA_KEY}`)
 
 type _Network = NetworkUserConfig & {
   ws?: string
@@ -72,6 +72,7 @@ const config: _Config = {
         url: "https://node.mainnet.etherlink.com",
         blockNumber: 22332526,
       },
+      url: "https://node.mainnet.etherlink.com",
       chainId: 42793,
       accounts: genesisAcc,
       saveDeployments: true,
@@ -83,6 +84,7 @@ const config: _Config = {
       forking: {
         url: "https://node.mainnet.etherlink.com",
       },
+      url: "https://node.mainnet.etherlink.com",
       chainId: 1313161554,
       accounts: PRIVATE_KEYS,
       saveDeployments: true,
