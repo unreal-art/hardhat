@@ -76,6 +76,7 @@ const config: _Config = {
       chainId: 42793,
       accounts: PRIVATE_KEYS,
       saveDeployments: true,
+      confirmations: 1,
       fusion: {
         // TODO: add fusion contract addresses here
       },
