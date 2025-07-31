@@ -74,7 +74,7 @@ const config: _Config = {
       },
       url: "https://node.mainnet.etherlink.com",
       chainId: 42793,
-      accounts: genesisAcc,
+      accounts: PRIVATE_KEYS,
       saveDeployments: true,
       fusion: {
         // TODO: add fusion contract addresses here
@@ -82,9 +82,9 @@ const config: _Config = {
     },
     aurora: {
       forking: {
-        url: "https://node.mainnet.etherlink.com",
+        url: "https://mainnet.aurora.dev",
       },
-      url: "https://node.mainnet.etherlink.com",
+      url: "https://mainnet.aurora.dev",
       chainId: 1313161554,
       accounts: PRIVATE_KEYS,
       saveDeployments: true,
