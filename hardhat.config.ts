@@ -16,6 +16,7 @@ console.log(`ENV_FILE is ${ENV_FILE}`)
 dotenv.config({ path: ENV_FILE })
 
 import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts"
+import { NetworkUserConfig } from "hardhat/types"
 
 let NETWORK = process.env.NETWORK || "hardhat"
 const INFURA_KEY = process.env.INFURA_KEY || ""
@@ -56,11 +57,12 @@ const config: _Config = {
       // deploy: "hardhat",
       chainId: 1337,
       accounts: PRIVATE_KEYS,
+    },
     etherlink: {
       forking: {
         url: "https://node.mainnet.etherlink.com",
         blockNumber: 22332526,
-        accounts:PRIVATE_KEYS,
+      },
       chainId: 42793,
       accounts: PRIVATE_KEYS,
       saveDeployments: true,
@@ -223,11 +225,7 @@ const config: _Config = {
 
 // config.networks.localhost = config.networks.hardhat
 
-import { string } from "hardhat/internal/core/params/argumentTypes"
-import { Network, NetworkUserConfig } from "hardhat/types"
-
 // console.log(config)
-
 module.exports = config
 
 import "./tasks"
