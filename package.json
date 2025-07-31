@@ -118,5 +118,8 @@
   },
   "trustedDependencies": [
     "fsevents"
-  ]
+  ],
+  "dependencies": {
+    "viem": "^2.33.2"
+  }
 }

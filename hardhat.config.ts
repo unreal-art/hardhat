@@ -74,6 +74,14 @@ const config: _Config = {
       forking: {
         url: "https://node.mainnet.etherlink.com",
         blockNumber: 22332526,
+        accounts: {
+          ...PRIVATE_KEYS.map((privateKey) => {
+            return {
+              privateKey: privateKey,
+              balance: `${1000000000000000000000000n}`,
+            }
+          }),
+        },
       },
       chainId: 42793,
       accounts: PRIVATE_KEYS,
