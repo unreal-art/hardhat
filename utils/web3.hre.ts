@@ -1,7 +1,7 @@
 import bluebird from "bluebird"
 import hre, { ethers } from "hardhat"
 
-import { AddressLike, BaseContract, BigNumberish, Signer } from "ethers"
+import { AddressLike, BaseContract, BigNumberish, Signer } from "ethersv6"
 import { Account } from "./types"
 import { ACCOUNTS, getAccount } from "./accounts"
 import { ERC20, UnrealToken } from "../typechain-types"
@@ -130,9 +130,6 @@ export async function connectERC(address: string) {
   return contract
 }
 
-export async function getTokenAddress() {
-  return getContractAddress("DartToken")
-}
 export async function connectUnrealToken() {
   return connectContract<UnrealToken>("UnrealToken")
 }
