@@ -31,14 +31,14 @@ type _Network = NetworkUserConfig & {
   odp?: string
 }
 
-const genesisAcc = {
+const genesisAcc = [
   ...PRIVATE_KEYS.map((privateKey) => {
     return {
       privateKey: privateKey,
       balance: `${1000000000000000000000000n}`,
     }
   }),
-}
+]
 
 interface _Config extends HardhatUserConfig {
   networks: {
