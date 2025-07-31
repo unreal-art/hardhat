@@ -31,6 +31,15 @@ type _Network = NetworkUserConfig & {
   odp?: string
 }
 
+const genesisAcc = {
+  ...PRIVATE_KEYS.map((privateKey) => {
+    return {
+      privateKey: privateKey,
+      balance: `${1000000000000000000000000n}`,
+    }
+  }),
+}
+
 interface _Config extends HardhatUserConfig {
   networks: {
     [network: string]: _Network
@@ -56,7 +65,7 @@ const config: _Config = {
       saveDeployments: true,
       // deploy: "hardhat",
       chainId: 1337,
-      accounts: PRIVATE_KEYS,
+      accounts: genesisAcc,
     },
     etherlink: {
       forking: {
@@ -64,7 +73,7 @@ const config: _Config = {
         blockNumber: 22332526,
       },
       chainId: 42793,
-      accounts: PRIVATE_KEYS,
+      accounts: genesisAcc,
       saveDeployments: true,
       fusion: {
         // TODO: add fusion contract addresses here
