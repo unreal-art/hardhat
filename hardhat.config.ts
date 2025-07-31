@@ -70,6 +70,29 @@ const config: _Config = {
         }),
       ],
     },
+    etherlink: {
+      forking: {
+        url: "https://node.mainnet.etherlink.com",
+        blockNumber: 22332526,
+      },
+      chainId: 42793,
+      accounts: PRIVATE_KEYS,
+      saveDeployments: true,
+      fusion: {
+        // TODO: add fusion contract addresses here
+      },
+    },
+    aurora: {
+      forking: {
+        url: "https://node.mainnet.etherlink.com",
+      },
+      chainId: 1313161554,
+      accounts: PRIVATE_KEYS,
+      saveDeployments: true,
+      fusion: {
+        // TODO: add fusion contract addresses here
+      },
+    },
     localhost: {
       url: "http://localhost:8545",
       ws: "ws://localhost:8546",
