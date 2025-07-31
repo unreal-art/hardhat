@@ -1,21 +1,19 @@
-import {HardhatRuntimeEnvironment} from "hardhat/types";
+import { HardhatRuntimeEnvironment } from "hardhat/types"
 
 export const getNetwork = (hre: HardhatRuntimeEnvironment) => {
-    const network = hre.network;
-    return network;
-};
+  const network = hre.network
+  return network
+}
 
 export const getNetworks = (
-    hre: HardhatRuntimeEnvironment,
-    filteredNetworks?: Array<string> = ["localhost"],
+  hre: HardhatRuntimeEnvironment,
+  filteredNetworks?: Array<string> = ["localhost"]
 ) => {
-    filteredNetworks = filteredNetworks ?? [];
+  filteredNetworks = filteredNetworks ?? []
 
-    let networkNames = Object.keys(hre.config.networks);
-    networkNames = networkNames.filter(
-        (network: string) => !filteredNetworks.includes(network),
-    );
-    return networkNames;
-};
-
-
+  let networkNames = Object.keys(hre.config.networks)
+  networkNames = networkNames.filter(
+    (network: string) => !filteredNetworks.includes(network)
+  )
+  return networkNames
+}
