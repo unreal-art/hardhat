@@ -1,0 +1,12 @@
+[install]
+production = false
+peer = true
+
+[test]
+# Configure Jest-compatible environment
+preload = ["./setup-bun-test.ts"]
+coverage = true
+
+[debug]
+# Enable source maps for better debugging experience
+sourcemap = true

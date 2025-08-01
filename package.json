@@ -31,6 +31,9 @@
     "pret": "rimraf deployments/localhost && pnpm run deploy localhost && pnpm fund localhost",
     "t": "pnpm run test --network localhost --bail",
     "test": "CONFIG=./.env hardhat test",
+    "test:bun": "bun run hardhat test",
+    "test:cross-chain": "bun run hardhat test test/cross-chain-swap.test.ts",
+    "relayer": "bun run scripts/cross-chain-relayer.ts",
     "d": "pnpm run deploy",
     "deploy": "hardhat deploy --network ",
     "deploy:calibration": "hardhat deploy --network calibration",
@@ -120,6 +123,7 @@
     "fsevents"
   ],
   "dependencies": {
+    "near-api-js": "^6.2.4",
     "viem": "^2.33.2"
   }
 }
