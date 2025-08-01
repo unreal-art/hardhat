@@ -29,6 +29,7 @@ type _Network = NetworkUserConfig & {
   explorer?: string
   confirmations?: number
   odp?: string
+  evmVersion?: string
 }
 
 const genesisAcc = [
@@ -50,7 +51,7 @@ const config: _Config = {
   solidity: {
     version: "0.8.30", // or any version you're using
     settings: {
-      evmVersion: "london",
+      evmVersion: "london", //cancum...
       optimizer: {
         enabled: true,
         runs: 200,
@@ -72,14 +73,14 @@ const config: _Config = {
       accounts: genesisAcc,
     },
     etherlink: {
-      url: "http://localhost:8545", // Use localhost when forking
-      chainId: 42793,
+      evmVersion: "cancum",
+      url: "https://node.ghostnet.etherlink.com", // Use localhost when forking
+      chainId: 128123,
       accounts: PRIVATE_KEYS,
       saveDeployments: true,
       confirmations: 1,
-      fusion: {
-        // TODO: add fusion contract addresses here
-      },
+      explorer: "https://testnet.explorer.etherlink.com",
+      faucet: ["https://faucet.etherlink.com"],
     },
     aurora: {
       forking: {
@@ -89,9 +90,6 @@ const config: _Config = {
       chainId: 1313161554,
       accounts: PRIVATE_KEYS,
       saveDeployments: true,
-      fusion: {
-        // TODO: add fusion contract addresses here
-      },
     },
     localhost: {
       url: "http://localhost:8545",
