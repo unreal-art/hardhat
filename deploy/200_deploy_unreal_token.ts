@@ -44,6 +44,7 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     // ))
   } else {
     unrealToken = await connectUnrealToken()
+    // await unrealToken.initialize("Unreal", "UNREAL", UNREAL_SUPPLY)
   }
   return true
 }
