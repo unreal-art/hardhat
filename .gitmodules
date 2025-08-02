@@ -2,3 +2,8 @@
 	path = lib/forge-std
 	url = git@github.com:foundry-rs/forge-std
 	# url = https://github.com/foundry-rs/forge-std
+
+
+[submodule "chains/unreal-near"]
+	path = chains/unreal-near
+	url = git@github.com:unreal-art/unreal-near
