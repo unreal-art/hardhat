@@ -4,7 +4,12 @@ import hre, { ethers } from "hardhat"
 import { AddressLike, BaseContract, BigNumberish, Signer } from "ethers"
 import { Account } from "./types"
 import { ACCOUNTS, getAccount } from "./accounts"
-import { ERC20, UnrealToken } from "../typechain-types"
+import {
+  ERC20,
+  UnrealBridge,
+  UnrealHTLC,
+  UnrealToken,
+} from "../typechain-types"
 
 /*
 
@@ -132,4 +137,12 @@ export async function connectERC(address: string) {
 
 export async function connectUnrealToken() {
   return connectContract<UnrealToken>("UnrealToken")
+}
+
+export async function connectUnrealHTLC() {
+  return connectContract<UnrealHTLC>("UnrealHTLC")
+}
+
+export async function connectUnrealBridge() {
+  return connectContract<UnrealBridge>("UnrealBridge")
 }
