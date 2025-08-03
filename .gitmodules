@@ -25,3 +25,7 @@
 	path = solvers
 	url = git@github.com:unreal-art/1inch-fusion-resolvers
 
+[submodule "unreal-aptos-crosslink-app"]
+	path = unreal-aptos-hole
+	url = git@github.com:unreal-art/unreal-aptos-crosslink
+
