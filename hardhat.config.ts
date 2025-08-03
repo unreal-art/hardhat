@@ -64,8 +64,7 @@ const config: _Config = {
   networks: {
     hardhat: {
       forking: {
-        url: "https://node.mainnet.etherlink.com",
-        blockNumber: 22332526,
+        url: "https://base-sepolia.g.alchemy.com/v2/uScobC3A2q3KXl956w4xsIh5VPooZJQp",
       },
       saveDeployments: true,
       // deploy: "hardhat",

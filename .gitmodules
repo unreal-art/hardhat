@@ -7,3 +7,21 @@
 [submodule "chains/unreal-near"]
 	path = chains/unreal-near
 	url = git@github.com:unreal-art/unreal-near
+
+[submodule "chains/unreal-aptos"]
+	path = chains/unreal-aptos
+	url = git@github.com:unreal-art/unreal-aptos
+
+[submodule "chains/unreal-starknet"]
+	path = chains/unreal_starknet
+	url = git@github.com:unreal-art/unreal-starknet
+
+
+[submodule "chains/unreal-wormhole"]
+	path = chains/unreal-wormhole
+	url = git@github.com:unreal-art/wormhole
+
+[submodule "solvers"]
+	path = solvers
+	url = git@github.com:unreal-art/1inch-fusion-resolvers
+
