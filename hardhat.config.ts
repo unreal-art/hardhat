@@ -144,6 +144,20 @@ const config: _Config = {
         // get 1 POL from discord server
       ],
     },
+
+    titanAI: {
+      //skale testnet
+      chainId: 1020352220,
+      url: "https://testnet.skalenodes.com/v1/aware-fake-trim-testnet",
+      ws: "wss://testnet.skalenodes.com/v1/ws/aware-fake-trim-testnet",
+      accounts: PRIVATE_KEYS,
+      saveDeployments: true,
+      // https://testnet.portal.skale.spatitce/chains/titan
+      // https://aware-fake-trim-testnet.explorer.testnet.skalenodes.com
+
+      // Faucet:
+      // https://www.sfuelstation.com/claim-sfuel/0x9c7398aEc564B94db7B932f96d2BD8010a7e8Ee2?testnet=true
+    },
     base: {
       // url: "https://base-sepolia.blockpi.network/v1/rpc/public",
       url: "https://base-sepolia.g.alchemy.com/v2/uScobC3A2q3KXl956w4xsIh5VPooZJQp",

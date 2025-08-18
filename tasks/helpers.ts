@@ -97,7 +97,7 @@ export const transferODP = async (
   console.log(`ODP transfer successful: ${transferTxHash}`)
 }
 
-export const balanceOfDart = async (
+export const balanceOfUnreal = async (
   hre: HardhatRuntimeEnvironment,
   signer: HardhatEthersSigner,
   address: string

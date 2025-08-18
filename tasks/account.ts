@@ -14,7 +14,7 @@ import Bluebird from "bluebird"
 import { connectODP, connectERC, connectUnrealToken } from "../utils/web3"
 import { FundOut, Out } from "./account.d"
 import {
-  balanceOfDart,
+  balanceOfUnreal,
   tokenBal,
   transferEther,
   transferToken,
@@ -38,7 +38,7 @@ task("bal", "Prints an account's balance")
       {
         account: address,
         balance: hre.ethers.formatEther(balance),
-        tokenBal: await balanceOfDart(hre, signer, address),
+        tokenBal: await balanceOfUnreal(hre, signer, address),
         nonce: await signer.getNonce("pending"),
       },
     ]
@@ -60,103 +60,6 @@ task("account", "Prints account address from private key")
   .setAction(async ({ privateKey }, hre) => {
     const address = getPublicAddress(privateKey, hre)
     console.log("account:", address)
-  })
-
-task("fund", "Fund, faucet account")
-  .addOptionalPositionalParam("eth", "The Eth drip", ".00001")
-  .addOptionalPositionalParam("dart", "The Dart Drip", "8000")
-  .setAction(async ({ eth, dart }, hre) => {
-    console.log("network", hre.network.name)
-    const whitelistedNetworks = ["localhost"]
-    const networkName = hre.network.name.trim()
-    const amountInWei = hre.ethers.parseEther(eth)
-
-    const fundingAccount = getAccount("admin")
-    const signer = await hre.ethers.getSigner(fundingAccount.address)
-    let nonce = await signer.getNonce()
-
-    const getNonce = (): number | string => {
-      if (whitelistedNetworks.includes(networkName)) return ""
-      const oldNonce = nonce
-      if (eth !== "0") nonce += 1
-      if (dart !== "0") nonce += 1
-      return oldNonce
-    }
-
-    console.log("Funding account:", fundingAccount.address)
-    console.log(
-      "Funding account bal:",
-      await getBalanceInEther(fundingAccount.address, hre)
-    )
-
-    const rcvAccounts: Account[] = [
-      getAccount("solver"),
-      getAccount("resource_provider"),
-      getAccount("job_creator"),
-    ]
-
-    const token = await hre.deployments.get("DartToken")
-    const dartBal = async (address: string) =>
-      await balanceOfDart(hre, signer, address)
-    const ethBal = async (address: string) =>
-      await getBalanceInEther(address, hre)
-
-    let out: Out = {
-      admin: {
-        address: fundingAccount.address,
-        balance: await getBalanceInEther(fundingAccount.address, hre),
-        tokenBal: await dartBal(fundingAccount.address),
-      },
-    }
-
-    let promises: any[] = []
-    for (const acc of rcvAccounts) {
-      const out_: FundOut = {
-        address: acc.address,
-        balance: await ethBal(acc.address),
-        tokenBal: await dartBal(acc.address),
-      }
-      out[acc.name] = out_
-      if (acc.name === "solver") {
-        const accBal = await getBalance(acc.address, hre)
-        const minBalance = hre.ethers.parseEther("0.0001")
-        if (accBal > minBalance) {
-          console.log(
-            `Balance is greater than or equal to ${hre.ethers.formatEther(
-              minBalance
-            )} ETH`
-          )
-          continue
-        } else {
-          console.log("Balance is less than 0.01 ETH")
-          let dripAction = hre.run("drip", {
-            account: acc.address,
-            eth,
-            dart,
-            nonce: getNonce().toString(),
-          })
-          if (whitelistedNetworks.includes(networkName)) {
-            dripAction = await dripAction
-          }
-          promises.push(dripAction)
-        }
-      }
-    }
-
-    await Bluebird.map(
-      promises,
-      async (p) => {
-        await p
-      },
-      { concurrency: rcvAccounts.length }
-    )
-
-    for (const outName in out) {
-      const outI: FundOut = out[outName]
-      outI.newBalance = await ethBal(outI.address)
-      outI.newTokenBal = await dartBal(outI.address)
-    }
-    console.table(out)
   })
 
 task("drip", "Drip any address")
@@ -221,6 +124,8 @@ task("drip", "Drip any address")
 
       out[acc.name] = out_
 
+      const tokenName = await token.name()
+
       let promises = [
         transferEther(acc, amountInWei, hre, signer, getNonce()),
         transferToken(acc.address, token, hre, amt, getNonce()),
@@ -232,7 +137,7 @@ task("drip", "Drip any address")
 
       const results = await Promise.allSettled(promises)
       results.forEach((result, index) => {
-        const transferType = index === 0 ? "Ether" : "Dart"
+        const transferType = index === 0 ? "Ether" : tokenName
         if (result.status === "fulfilled") {
           console.log(`${transferType} successful and returned ${result.value}`)
         } else {
@@ -270,10 +175,12 @@ task("odp", "Drip account's balance")
 task("unreal", "Drip account's balance")
   .addPositionalParam("account", "The address or privateKey to drip to")
   .addPositionalParam("unreal", "The amount to drip", "0")
-  .setAction(async ({ unreal, account }, hre) => {
+  .addOptionalPositionalParam("eth", "The eth to drip", "0")
+  .setAction(async ({ unreal, account, eth }, hre) => {
     const tokenContract = await connectUnrealToken(hre)
     await hre.run("drip", {
       account,
+      eth,
       amt: unreal,
       tokenAddress: await tokenContract.getAddress(),
     })
@@ -281,13 +188,13 @@ task("unreal", "Drip account's balance")
 
 task("new-wallet", "New Wallet, optional drip")
   .addOptionalPositionalParam("eth", "The amount to drip", "0.01")
-  .addOptionalPositionalParam("dart", "The amount to drip", "10000")
-  .setAction(async ({ eth, dart }, hre) => {
+  .addOptionalPositionalParam("amt", "The amount to drip", "10000")
+  .setAction(async ({ eth, amt }, hre) => {
     console.log("network", hre.network.name)
     const wallet = Wallet1.generate()
     const privateKey = wallet.getPrivateKeyString()
     console.log(`export PRIVATE_KEY=${privateKey}`)
-    await hre.run("drip", { account: privateKey, eth, dart })
+    await hre.run("drip", { account: privateKey, eth, amt })
   })
 
 task("tx", "New transaction")
