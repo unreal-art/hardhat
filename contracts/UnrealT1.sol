@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20CappedUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 
 // TODO:
 // For proxy routing usecase
@@ -21,7 +22,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20CappedUp
 
 // transfer: Only whitelisted addresses can transfer: mapping(address => bool) public whitelisted; including owner
 // Max pay at a time is MAX_COST = 1ether
-// Min pay at a time is MIN_COST = 1wei
+// Min pay at a time is MIN_COST = 1wei=
 // TODO: name should be hardcoded and lets use a good emoji if its okay
 
 contract UnrealT1 is
@@ -29,6 +30,7 @@ contract UnrealT1 is
     ERC20PermitUpgradeable,
     ERC20PausableUpgradeable,
     ERC20CappedUpgradeable,
+    ERC20BurnableUpgradeable,
     OwnableUpgradeable,
     ReentrancyGuardUpgradeable
 {
