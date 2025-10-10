@@ -9,6 +9,8 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy, execute } = deployments
   const { admin,  verifier } = await getNamedAccounts()
 
+  console.log("SET verifier: ", verifier)
+
   const signer = await hre.ethers.getSigner(admin)
   let nonce = await signer.getNonce("pending")
 
@@ -25,27 +27,36 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   if (await deployer("OneP", hre)) {
     console.log("Deploying OneP Protocol Contract....🔐🚀")
     
-    // Deploy the OneP contract
+    // Deploy the OneP contract with token initialization
     await deploy("OneP", {
       from: admin,
       contract: "OneP",
       proxy: {
         proxyContract: "OpenZeppelinTransparentProxy",
+        execute: {
+          init: {
+            methodName: "initialize",
+            args: [
+              ethers.parseEther("10000000"), // 10M initial supply
+              ethers.parseEther("100000000")  // 100M max supply
+            ]
+          }
+        }
       },
       log: true,
     })
 
-    // Initialize the OneP contract
+    // Initialize the OneP protocol with verifier
     await execute(
       "OneP",
       {
         from: admin,
         log: true,
       },
-      "initialize",
-      verifier // verifier address
+      "initializeOneP",
+      verifier
     )
-    
+
     // Connect to the deployed contract
     oneP = await connectOneP()
 
@@ -68,7 +79,9 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     if (curVerifier !== verifier) {
       console.log(`Updating Verifier from ${curVerifier} to ${verifier}`)
-      await oneP.updateVerifier(verifier)
+      const updateTx = await oneP.updateVerifier(verifier)
+      await updateTx.wait()
+      console.log(`Verifier updated successfully!`)
     }
 
     console.log(`OneP Protocol already deployed at: ${await oneP.getAddress()}`)

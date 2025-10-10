@@ -42,18 +42,14 @@ contract OneP is OnePToken {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
+        super._disableInitializers();
     }
 
     /**
-     * @dev Initialize the OneP contract
+     * @dev Initialize the OneP contract with verifier
      * @param _verifier Address of the backend verifier
      */
-    function initialize(address _verifier) public initializer {
-        uint256 _initialSupply = 10_000_000 ether; //10M $1P tokens
-
-        uint256 _cap = 100_000_000 ether; //100M $1P tokens
-        super.initialize(_initialSupply, _cap); // Initialize the parent OnePToken contract
-
+    function initializeOneP(address _verifier) public initializer {
         // Set verifier
         verifier = _verifier;
     }
