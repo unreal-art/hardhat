@@ -165,7 +165,7 @@ contract MoneyPotManager is ReentrancyGuard {
         MoneyPot storage pot = pots[attempt.potId];
 
         if (!pot.isActive) revert PotNotActive();
-        if (block.timestamp >= pot.expiresAt) revert PotExpired();
+        if (block.timestamp >= pot.expiresAt) revert ExpiredPot();
         if (block.timestamp >= attempt.expiresAt) revert AttemptExpired();
         if (attempt.isCompleted) revert AttemptCompleted();
 
