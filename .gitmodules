@@ -12,7 +12,7 @@
 	path = chains/unreal-aptos
 	url = git@github.com:unreal-art/unreal-aptos
 
-[submodule "chains/unreal-starknet"]
+[submodule "chains/unreal-starknet"] 
 	path = chains/unreal_starknet
 	url = git@github.com:unreal-art/unreal-starknet
 

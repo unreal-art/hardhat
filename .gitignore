@@ -11,7 +11,7 @@ typechain-types
 deployments.zip
 
 
-.prettierignore.ci
+.prettierignore.ci 
 
 .env
 ./.env
