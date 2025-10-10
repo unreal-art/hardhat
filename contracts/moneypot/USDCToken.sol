@@ -102,7 +102,11 @@ contract USDCToken is
      * @param from Address to burn tokens from
      * @param amount Amount of tokens to burn
      */
-    function burn(address from, uint256 amount) external onlyOwner {
+    function burn(address from, uint256 amount) external {
+        require(
+            msg.sender == from,
+            "Only the owner of the token can burn tokens"
+        );
         _burn(from, amount);
     }
 
