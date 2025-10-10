@@ -13,7 +13,7 @@ pragma solidity ^0.8.20;
 library OnePProtocol {
     // ============ CONSTANTS ============
 
-    uint64 constant MAX_ROUNDS = 30;
+    uint64 constant MAX_ROUNDS = 10;
     uint256 constant REGISTRATION_FEE = 100 ether; // 100 $1P tokens for registration
 
     uint64 constant ATTEMPT_EXPIRY_DURATION = 600; // 10 minutes

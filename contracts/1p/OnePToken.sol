@@ -34,8 +34,8 @@ contract OnePToken is
     UUPSUpgradeable
 {
     // Token Economics Constants
-    uint256 public constant MAX_COST = 1 ether; // Maximum cost per attempt
-    uint256 public constant MIN_COST = 1 wei; // Minimum cost per attempt
+    uint256 public constant MAX_ATTEMPT_FEE = 2 ether; // Maximum cost per attempt
+    uint256 public constant MIN_ATTEMPT_FEE = 0.01 ether; // Minimum cost per attempt
 
     // Fee Configuration
     uint256 public baseAttemptFee; // Base fee for bonding curve
@@ -94,9 +94,13 @@ contract OnePToken is
             (totalSupply() / 1e18) *
             feeMultiplier;
         return
-            calculatedFee > MAX_COST
-                ? MAX_COST
-                : (calculatedFee < MIN_COST ? MIN_COST : calculatedFee);
+            calculatedFee > MAX_ATTEMPT_FEE
+                ? MAX_ATTEMPT_FEE
+                : (
+                    calculatedFee < MIN_ATTEMPT_FEE
+                        ? MIN_ATTEMPT_FEE
+                        : calculatedFee
+                );
     }
 
     /**
