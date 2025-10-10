@@ -47,20 +47,20 @@ contract OneP is OnePToken {
     /**
      * @dev Initialize the OneP contract
      * @param _verifier Address of the backend verifier
-     * @param _initialSupply Initial token supply to mint
-     * @param _cap Maximum token supply cap
-     * @param _baseAttemptFee Base fee for attempt bonding curve
-     * @param _feeMultiplier Multiplier for attempt bonding curve
      */
     function initialize(
-        address _verifier,
-        uint256 _initialSupply,
-        uint256 _cap,
-        uint256 _baseAttemptFee,
-        uint256 _feeMultiplier
-    ) public initializer {
-        // Initialize the parent OnePToken contract
-        super.initialize(_initialSupply, _cap, _baseAttemptFee, _feeMultiplier);
+        address _verifier
+    )
+        public
+        // uint256 _feeMultiplier
+        initializer
+    {
+        uint256 _initialSupply = 10_000_000 ether; //10M $1P tokens
+
+        uint256 _cap = 100_000_000 ether; //100M $1P tokens
+        uint256 _baseAttemptFee = 1 ether;
+        uint256 _feeMultiplier = 0.1 ether;
+        super.initialize(_initialSupply, _cap, _baseAttemptFee, _feeMultiplier); // Initialize the parent OnePToken contract
 
         // Set verifier
         verifier = _verifier;
