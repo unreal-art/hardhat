@@ -61,9 +61,6 @@ contract USDCToken is
 
         address _initialOwner = msg.sender;
 
-        // Transfer ownership to initial owner
-        _transferOwnership(_initialOwner);
-
         // Mint initial supply to the initial owner
         _mint(_initialOwner, INITIAL_SUPPLY);
     }
