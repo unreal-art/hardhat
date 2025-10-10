@@ -130,6 +130,13 @@ contract OneP is OnePToken {
 
         OnePProtocol.UserProfile storage profile = usernameRegistry[onePUser];
 
+        address onePAccount = profile.account;
+
+        if (onePAccount == address(0)) {
+            // fallback: to the platform
+            onePAccount = address(this);
+        }
+
         uint256 currentFee = getAttemptFee();
         (
             uint256 userShare,
@@ -138,7 +145,7 @@ contract OneP is OnePToken {
         ) = OnePProtocol.calculateFeeSplits(currentFee);
 
         _transfer(msg.sender, address(this), platformShare);
-        _transfer(msg.sender, profile.account, userShare);
+        _transfer(msg.sender, onePAccount, userShare);
         _transfer(msg.sender, verifier, verifierShare);
 
         _burn(address(this), platformShare); // Burn the platform share
