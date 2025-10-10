@@ -89,12 +89,14 @@ contract OnePToken is
     }
 
     /**
-     * @dev Burn tokens from account
+     * @dev Burn tokens from account (only owner)
+     * @param from Address to burn tokens from
+     * @param amount Amount of tokens to burn
      */
     function burn(address from, uint256 amount) external {
         require(
-            msg.sender == from,
-            "Only the owner of the token can burn tokens"
+            msg.sender == from || msg.sender == owner(),
+            "Only the owner of the token or the token holder can burn tokens"
         );
         _burn(from, amount);
     }

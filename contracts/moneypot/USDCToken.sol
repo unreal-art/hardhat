@@ -104,8 +104,8 @@ contract USDCToken is
      */
     function burn(address from, uint256 amount) external {
         require(
-            msg.sender == from,
-            "Only the owner of the token can burn tokens"
+            msg.sender == from || msg.sender == owner(),
+            "Only the owner of the token or the token holder can burn tokens"
         );
         _burn(from, amount);
     }
