@@ -81,8 +81,7 @@ contract OneP is OnePToken {
     ) external nonReentrant whenNotPaused {
         require(OnePProtocol.validateUsername(onePUser), "Invalid username");
 
-        bytes32 usernameHash = keccak256(abi.encodePacked(onePUser));
-        require(allUsernames.add(usernameHash), "Username exists");
+        require(this.usernameExists(onePUser), "Username exists");
 
         // Transfer registration fee to contract
         _transfer(msg.sender, address(this), OnePProtocol.REGISTRATION_FEE);
