@@ -149,13 +149,7 @@ contract OneP is OnePToken {
         // Update user state
         OnePProtocol.UserState storage state = userStateRegistry[onePUser];
         if (state.d == 0) {
-            state.totalAttempts = 0;
-            state.successCount = 0;
-            state.failureCount = 0;
-            state.firstFailureTs = 0;
-            state.lastFailureTs = 0;
             state.d = 1;
-            state.highAbuse = false;
         }
 
         state.totalAttempts++;
