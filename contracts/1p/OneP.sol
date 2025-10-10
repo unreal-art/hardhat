@@ -71,11 +71,6 @@ contract OneP is OnePToken {
         OnePProtocol.UserState memory state = userStateRegistry[onePUser];
         uint64 difficulty = state.d == 0 ? 1 : state.d; // Default to difficulty 1 if not set
 
-        // Cap difficulty at MAX_ROUNDS
-        if (difficulty > OnePProtocol.MAX_ROUNDS) {
-            difficulty = OnePProtocol.MAX_ROUNDS;
-        }
-
         // Mathematical bonding curve: exponential growth with controlled bounds
         // Formula: minFee + (maxFee - minFee) * (difficulty^2.5) / (MAX_ROUNDS^2.5)
         // This creates a curve that starts slow and accelerates
