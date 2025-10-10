@@ -78,7 +78,7 @@ contract OneP is OnePToken {
         string memory onePUser,
         string memory name,
         string memory img
-    ) external nonReentrant whenNotPaused {
+    ) external nonReentrant {
         require(OnePProtocol.validateUsername(onePUser), "Invalid username");
 
         require(this.usernameExists(onePUser), "Username exists");
@@ -121,11 +121,8 @@ contract OneP is OnePToken {
      * @dev Request authentication attempt (Step 3 of 1P Protocol)
      * @param onePUser Username requesting authentication
      */
-    function requestAttempt(
-        string memory onePUser
-    ) external nonReentrant whenNotPaused {
-        bytes32 usernameHash = keccak256(abi.encodePacked(onePUser));
-        require(allUsernames.contains(usernameHash), "Username not registered");
+    function requestAttempt(string memory onePUser) external nonReentrant {
+        require(this.usernameExists(onePUser), "Username not registered");
 
         OnePProtocol.UserProfile storage profile = usernameRegistry[onePUser];
 
