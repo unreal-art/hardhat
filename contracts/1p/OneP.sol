@@ -172,7 +172,7 @@ contract OneP is OnePToken {
             onePUser,
             msg.sender,
             d,
-            300 // 5 minutes expiry
+            OnePProtocol.ATTEMPT_EXPIRY_DURATION // 10 minutes expiry
         );
 
         attemptRegistry[attemptId] = attempt;

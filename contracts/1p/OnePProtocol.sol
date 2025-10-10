@@ -16,6 +16,7 @@ library OnePProtocol {
     uint64 constant MAX_ROUNDS = 30;
     uint256 constant REGISTRATION_FEE = 100 ether; // 100 $1P tokens for registration
 
+    uint64 constant ATTEMPT_EXPIRY_DURATION = 600; // 10 minutes
     // Fee splitting percentages (basis points: 10000 = 100%)
     uint256 constant ATTEMPT_FEE_USER_SHARE = 4000; // 40%
     uint256 constant ATTEMPT_FEE_VERIFIER_SHARE = 4000; // 40%
