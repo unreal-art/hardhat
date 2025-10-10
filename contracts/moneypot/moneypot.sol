@@ -1,25 +1,34 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./USDCToken.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract MoneyPotManager is ReentrancyGuard {
-    using SafeERC20 for IERC20;
+/**
+ * @title MoneyPot
+ * @dev MoneyPot contract that inherits from USDCToken and implements the MoneyPot functionality
+ * @notice This contract combines USDC token functionality with MoneyPot game mechanics
+ *
+ * Architecture:
+ * - Inherits from USDCToken for ERC20 functionality and token economics
+ * - Implements MoneyPot game logic with built-in USDC token
+ * - Maintains separation of concerns: token logic in parent, game logic here
+ */
+contract MoneyPot is USDCToken {
+    using SafeERC20 for USDCToken;
 
     // Constants
     uint256 public constant DIFFICULTY_MOD = 3;
     uint256 public constant HUNTER_SHARE_PERCENT = 40;
     uint256 public constant CREATOR_ENTRY_FEE_SHARE_PERCENT = 50;
 
-    // Immutable state
-    IERC20 public immutable usdcToken;
-    address public immutable trustedOracle;
-    address public immutable platformAddress;
+    // State variables
+    address public trustedOracle;
+    address public platformAddress;
 
     // Structs
-    struct MoneyPot {
+    struct MoneyPotData {
         uint256 id;
         address creator;
         uint256 totalAmount;
@@ -43,7 +52,7 @@ contract MoneyPotManager is ReentrancyGuard {
     // State
     uint256 public nextPotId;
     uint256 public nextAttemptId;
-    mapping(uint256 => MoneyPot) public pots;
+    mapping(uint256 => MoneyPotData) public pots;
     mapping(uint256 => Attempt) public attempts;
     uint256[] private potIds;
 
@@ -84,12 +93,24 @@ contract MoneyPotManager is ReentrancyGuard {
     error AttemptCompleted();
     error Unauthorized();
 
-    constructor(
-        address _usdcToken,
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    /**
+     * @dev Initialize the MoneyPot contract
+     * @param _trustedOracle Address of the trusted oracle
+     * @param _platformAddress Address of the platform
+     */
+    function initialize(
         address _trustedOracle,
         address _platformAddress
-    ) {
-        usdcToken = IERC20(_usdcToken);
+    ) public initializer {
+        // Initialize the parent USDCToken contract
+        super.initializeToken(address(this)); // Contract owns the initial supply
+
+        // Set MoneyPot specific parameters
         trustedOracle = _trustedOracle;
         platformAddress = _platformAddress;
     }
@@ -104,7 +125,7 @@ contract MoneyPotManager is ReentrancyGuard {
 
         uint256 id = nextPotId++;
 
-        pots[id] = MoneyPot({
+        pots[id] = MoneyPotData({
             id: id,
             creator: msg.sender,
             totalAmount: amount,
@@ -117,14 +138,14 @@ contract MoneyPotManager is ReentrancyGuard {
         });
 
         potIds.push(id);
-        usdcToken.safeTransferFrom(msg.sender, address(this), amount);
+        _transfer(msg.sender, address(this), amount);
 
         emit PotCreated(id, msg.sender, block.timestamp);
         return id;
     }
 
     function attemptPot(uint256 potId) external nonReentrant returns (uint256) {
-        MoneyPot storage pot = pots[potId];
+        MoneyPotData storage pot = pots[potId];
 
         if (!pot.isActive) revert PotNotActive();
         if (block.timestamp >= pot.expiresAt) revert ExpiredPot();
@@ -134,8 +155,8 @@ contract MoneyPotManager is ReentrancyGuard {
             100;
         uint256 platformShare = entryFee - creatorShare;
 
-        usdcToken.safeTransferFrom(msg.sender, pot.creator, creatorShare);
-        usdcToken.safeTransferFrom(msg.sender, platformAddress, platformShare);
+        _transfer(msg.sender, pot.creator, creatorShare);
+        _transfer(msg.sender, platformAddress, platformShare);
 
         pot.attemptsCount++;
 
@@ -162,7 +183,7 @@ contract MoneyPotManager is ReentrancyGuard {
         if (msg.sender != trustedOracle) revert Unauthorized();
 
         Attempt storage attempt = attempts[attemptId];
-        MoneyPot storage pot = pots[attempt.potId];
+        MoneyPotData storage pot = pots[attempt.potId];
 
         if (!pot.isActive) revert PotNotActive();
         if (block.timestamp >= pot.expiresAt) revert ExpiredPot();
@@ -178,8 +199,8 @@ contract MoneyPotManager is ReentrancyGuard {
                 100;
             uint256 platformShare = pot.totalAmount - hunterShare;
 
-            usdcToken.safeTransfer(attempt.hunter, hunterShare);
-            usdcToken.safeTransfer(platformAddress, platformShare);
+            _transfer(address(this), attempt.hunter, hunterShare);
+            _transfer(address(this), platformAddress, platformShare);
 
             emit PotSolved(attempt.potId, attempt.hunter, block.timestamp);
         } else {
@@ -188,20 +209,20 @@ contract MoneyPotManager is ReentrancyGuard {
     }
 
     function expirePot(uint256 potId) external nonReentrant {
-        MoneyPot storage pot = pots[potId];
+        MoneyPotData storage pot = pots[potId];
 
         if (!pot.isActive) revert PotNotActive();
         if (block.timestamp < pot.expiresAt) revert NotExpired();
 
         pot.isActive = false;
-        usdcToken.safeTransfer(pot.creator, pot.totalAmount);
+        _transfer(address(this), pot.creator, pot.totalAmount);
 
         emit PotExpired(potId, pot.creator, block.timestamp);
     }
 
     // View functions
     function getBalance(address account) external view returns (uint256) {
-        return usdcToken.balanceOf(account);
+        return balanceOf(account);
     }
 
     function getPots() external view returns (uint256[] memory) {
@@ -224,7 +245,7 @@ contract MoneyPotManager is ReentrancyGuard {
         return active;
     }
 
-    function getPot(uint256 potId) external view returns (MoneyPot memory) {
+    function getPot(uint256 potId) external view returns (MoneyPotData memory) {
         return pots[potId];
     }
 
