@@ -52,8 +52,7 @@ contract OneP is OnePToken {
         uint256 _initialSupply = 10_000_000 ether; //10M $1P tokens
 
         uint256 _cap = 100_000_000 ether; //100M $1P tokens
-        uint256 _baseAttemptFee = 1 ether;
-        super.initialize(_initialSupply, _cap, _baseAttemptFee); // Initialize the parent OnePToken contract
+        super.initialize(_initialSupply, _cap); // Initialize the parent OnePToken contract
 
         // Set verifier
         verifier = _verifier;
@@ -95,10 +94,12 @@ contract OneP is OnePToken {
         maxRoundsScaled = maxRoundsScaled * maxRounds; // maxRounds^3
         maxRoundsScaled = maxRoundsScaled / 2; // Approximate maxRounds^2.5
 
+        uint256 decimals = this.decimals();
         // Calculate fee using the curve
         uint256 feeRange = maxFee - minFee;
-        uint256 curveMultiplier = (difficultyScaled * 1e18) / maxRoundsScaled;
-        uint256 additionalFee = (feeRange * curveMultiplier) / 1e18;
+        uint256 curveMultiplier = (difficultyScaled * decimals) /
+            maxRoundsScaled;
+        uint256 additionalFee = (feeRange * curveMultiplier) / decimals;
 
         uint256 calculatedFee = minFee + additionalFee;
 

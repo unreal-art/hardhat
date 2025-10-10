@@ -33,9 +33,6 @@ contract OnePToken is
     ReentrancyGuardUpgradeable,
     UUPSUpgradeable
 {
-    // Fee Configuration
-    uint256 public baseAttemptFee; // Base fee for attempts
-
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -45,12 +42,10 @@ contract OnePToken is
      * @dev Initialize the OnePToken contract
      * @param _initialSupply Initial token supply to mint
      * @param _cap Maximum token supply cap
-     * @param _baseAttemptFee Base fee for attempts
      */
     function initialize(
         uint256 _initialSupply,
-        uint256 _cap,
-        uint256 _baseAttemptFee
+        uint256 _cap
     ) public initializer {
         string memory name_ = "1P Token";
         string memory symbol_ = "1P";
@@ -63,8 +58,6 @@ contract OnePToken is
         __ReentrancyGuard_init();
         __UUPSUpgradeable_init();
 
-        baseAttemptFee = _baseAttemptFee;
-
         _mint(msg.sender, _initialSupply);
     }
 
@@ -74,15 +67,6 @@ contract OnePToken is
     function _authorizeUpgrade(
         address newImplementation
     ) internal override onlyOwner {}
-
-    // ============ TOKEN ECONOMICS ============
-
-    /**
-     * @dev Update base attempt fee (only owner)
-     */
-    function updateBaseAttemptFee(uint256 _baseAttemptFee) external onlyOwner {
-        baseAttemptFee = _baseAttemptFee;
-    }
 
     // ============ ADMIN FUNCTIONS ============
 
