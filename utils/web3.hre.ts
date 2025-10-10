@@ -6,6 +6,7 @@ import { Account } from "./types"
 import { ACCOUNTS, getAccount } from "./accounts"
 import {
   ERC20,
+  OneP,
   UnrealBridge,
   UnrealHTLC,
   UnrealToken,
@@ -145,4 +146,8 @@ export async function connectUnrealHTLC() {
 
 export async function connectUnrealBridge() {
   return connectContract<UnrealBridge>("UnrealBridge")
+}
+
+export async function connectOneP() {
+  return connectContract<OneP>("OneP")
 }
