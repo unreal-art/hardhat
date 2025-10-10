@@ -158,3 +158,18 @@ task("1p:list-usernames", "List all registered usernames")
       })
     }
   })
+
+
+  task("1p:token", "Drip account's balance")
+  .addPositionalParam("account", "The address or privateKey to drip to")
+  .addPositionalParam("amount", "The amount to drip", "0")
+  .addOptionalPositionalParam("eth", "The eth to drip", "0")
+  .setAction(async ({ amount, account, eth }, hre) => {
+    const tokenContract = await connectOneP(hre)
+    await hre.run("drip", {
+      account,
+      eth,
+      amt: amount,
+      tokenAddress: await tokenContract.getAddress(),
+    })
+  })
