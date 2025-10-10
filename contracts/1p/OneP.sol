@@ -82,7 +82,7 @@ contract OneP is OnePToken {
         require(OnePProtocol.validateUsername(onePUser), "Invalid username");
 
         bytes32 usernameHash = keccak256(abi.encodePacked(onePUser));
-        require(!allUsernames.contains(usernameHash), "Username exists");
+        require(allUsernames.add(usernameHash), "Username exists");
 
         // Transfer registration fee to contract
         _transfer(msg.sender, address(this), OnePProtocol.REGISTRATION_FEE);
@@ -95,7 +95,6 @@ contract OneP is OnePToken {
         });
 
         usernameRegistry[onePUser] = profile;
-        allUsernames.add(usernameHash);
         allUsernamesArray.push(onePUser);
 
         emit UsernameRegistered(onePUser, name, img);
