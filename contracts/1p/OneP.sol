@@ -128,9 +128,23 @@ contract OneP is OnePToken {
         bytes32 usernameHash = keccak256(abi.encodePacked(onePUser));
         require(allUsernames.contains(usernameHash), "Username not registered");
 
+        OnePProtocol.UserProfile storage profile = usernameRegistry[onePUser];
+
         uint256 currentFee = getAttemptFee();
-        _transfer(msg.sender, address(this), currentFee);
-        _burn(address(this), currentFee); // Burn the attempt fee
+        uint256 userShare = (currentFee * 40) / 100;
+        uint256 verifierShare = (currentFee * 40) / 100;
+        uint256 platFormShare = (currentFee * 20) / 100;
+
+        require(
+            userShare + verifierShare + platFormShare == currentFee,
+            "unable to split fee"
+        );
+
+        _transfer(msg.sender, address(this), platFormShare);
+        _transfer(msg.sender, profile.account, userShare);
+        _transfer(msg.sender, verifier, verifierShare);
+
+        _burn(address(this), platFormShare); // Burn the attempt fee
 
         // Update user state
         OnePProtocol.UserState storage state = userStateRegistry[onePUser];
@@ -272,6 +286,15 @@ contract OneP is OnePToken {
         string memory onePUser
     ) external view returns (OnePProtocol.UserProfile memory) {
         return usernameRegistry[onePUser];
+    }
+
+    /**
+     * @dev Get user profile by username
+     */
+    function getOnePUser(
+        string memory onePUser
+    ) external view returns (OnePProtocol.UserProfile memory) {
+        return this.getUserProfile(onePUser);
     }
 
     /**
