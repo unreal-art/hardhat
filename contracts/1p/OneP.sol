@@ -48,22 +48,43 @@ contract OneP is OnePToken {
      * @dev Initialize the OneP contract
      * @param _verifier Address of the backend verifier
      */
-    function initialize(
-        address _verifier
-    )
-        public
-        // uint256 _feeMultiplier
-        initializer
-    {
+    function initialize(address _verifier) public initializer {
         uint256 _initialSupply = 10_000_000 ether; //10M $1P tokens
 
         uint256 _cap = 100_000_000 ether; //100M $1P tokens
         uint256 _baseAttemptFee = 1 ether;
-        uint256 _feeMultiplier = 0.1 ether;
-        super.initialize(_initialSupply, _cap, _baseAttemptFee, _feeMultiplier); // Initialize the parent OnePToken contract
+        super.initialize(_initialSupply, _cap, _baseAttemptFee); // Initialize the parent OnePToken contract
 
         // Set verifier
         verifier = _verifier;
+    }
+
+    // ============ TOKEN ECONOMICS ============
+
+    /**
+     * @dev Calculate attempt fee based on user's difficulty level
+     * @param onePUser Username to get difficulty for
+     * @return attemptFee Fee for the attempt based on difficulty
+     */
+    function getAttemptFee(
+        string memory onePUser
+    ) public view returns (uint256 attemptFee) {
+        OnePProtocol.UserState memory state = userStateRegistry[onePUser];
+        uint64 difficulty = state.d == 0 ? 1 : state.d; // Default to difficulty 1 if not set
+
+        // Fee increases with difficulty: baseFee * (1 + difficulty * 0.1)
+        // This means difficulty 1 = 1.1x, difficulty 10 = 2x base fee
+        uint256 difficultyMultiplier = 1000 + (difficulty * 100); // 1000 = 1.0x, 1100 = 1.1x, 2000 = 2.0x
+        uint256 calculatedFee = (baseAttemptFee * difficultyMultiplier) / 1000;
+
+        // Apply min/max bounds
+        if (calculatedFee > MAX_ATTEMPT_FEE) {
+            return MAX_ATTEMPT_FEE;
+        } else if (calculatedFee < MIN_ATTEMPT_FEE) {
+            return MIN_ATTEMPT_FEE;
+        } else {
+            return calculatedFee;
+        }
     }
 
     // ============ 1P PROTOCOL FUNCTIONS ============
@@ -133,7 +154,7 @@ contract OneP is OnePToken {
             onePAccount = address(this);
         }
 
-        uint256 currentFee = getAttemptFee();
+        uint256 currentFee = getAttemptFee(onePUser);
         (
             uint256 userShare,
             uint256 verifierShare,

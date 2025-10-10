@@ -38,8 +38,7 @@ contract OnePToken is
     uint256 public constant MIN_ATTEMPT_FEE = 0.01 ether; // Minimum cost per attempt
 
     // Fee Configuration
-    uint256 public baseAttemptFee; // Base fee for bonding curve
-    uint256 public feeMultiplier; // Multiplier for bonding curve
+    uint256 public baseAttemptFee; // Base fee for attempts
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -50,14 +49,12 @@ contract OnePToken is
      * @dev Initialize the OnePToken contract
      * @param _initialSupply Initial token supply to mint
      * @param _cap Maximum token supply cap
-     * @param _baseAttemptFee Base fee for attempt bonding curve
-     * @param _feeMultiplier Multiplier for attempt bonding curve
+     * @param _baseAttemptFee Base fee for attempts
      */
     function initialize(
         uint256 _initialSupply,
         uint256 _cap,
-        uint256 _baseAttemptFee,
-        uint256 _feeMultiplier
+        uint256 _baseAttemptFee
     ) public initializer {
         string memory name_ = "1P Token";
         string memory symbol_ = "1P";
@@ -71,7 +68,6 @@ contract OnePToken is
         __UUPSUpgradeable_init();
 
         baseAttemptFee = _baseAttemptFee;
-        feeMultiplier = _feeMultiplier;
 
         _mint(msg.sender, _initialSupply);
     }
@@ -86,32 +82,10 @@ contract OnePToken is
     // ============ TOKEN ECONOMICS ============
 
     /**
-     * @dev Calculate dynamic attempt fee based on bonding curve
-     * @return Current attempt fee in $1P tokens
+     * @dev Update base attempt fee (only owner)
      */
-    function getAttemptFee() public view returns (uint256) {
-        uint256 calculatedFee = baseAttemptFee +
-            (totalSupply() / 1e18) *
-            feeMultiplier;
-        return
-            calculatedFee > MAX_ATTEMPT_FEE
-                ? MAX_ATTEMPT_FEE
-                : (
-                    calculatedFee < MIN_ATTEMPT_FEE
-                        ? MIN_ATTEMPT_FEE
-                        : calculatedFee
-                );
-    }
-
-    /**
-     * @dev Update attempt fee parameters (only owner)
-     */
-    function updateFeeParameters(
-        uint256 _baseAttemptFee,
-        uint256 _feeMultiplier
-    ) external onlyOwner {
+    function updateBaseAttemptFee(uint256 _baseAttemptFee) external onlyOwner {
         baseAttemptFee = _baseAttemptFee;
-        feeMultiplier = _feeMultiplier;
     }
 
     // ============ ADMIN FUNCTIONS ============
