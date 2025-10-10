@@ -108,7 +108,19 @@ library OnePProtocol {
         ) {
             return true;
         }
-        return false;
+    }
+
+    /**
+     * @dev Check if new status is greater than current status (progressive update)
+     * @param currentStatus Current attempt status
+     * @param newStatus New attempt status
+     * @return isProgressive True if new status is greater than current
+     */
+    function isStatusProgressive(
+        Status currentStatus,
+        Status newStatus
+    ) internal pure returns (bool isProgressive) {
+        return uint8(newStatus) > uint8(currentStatus);
     }
 
     // ============ DIFFICULTY CALCULATION ============

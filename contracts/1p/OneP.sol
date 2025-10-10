@@ -162,78 +162,76 @@ contract OneP is OnePToken {
     }
 
     /**
-     * @dev Set attempt status to in progress (only verifier)
-     */
-    function setInProgress(uint64 attemptId) external onlyVerifier {
-        OnePProtocol.Attempt storage att = attemptRegistry[attemptId];
-        require(att.status == OnePProtocol.Status.Pending, "Not pending");
-        require(!OnePProtocol.isAttemptExpired(att), "Expired");
-
-        att.status = OnePProtocol.Status.InProgress;
-        emit AttemptUpdated(attemptId, OnePProtocol.Status.InProgress);
-    }
-
-    /**
-     * @dev Update attempt status (only verifier)
+     * @dev Update attempt status with progressive validation (only verifier)
      * @param attemptId ID of the attempt to update
-     * @param newStatus New status (Success or Failed)
+     * @param newStatus New status (must be greater than current status)
      */
     function updateAttemptStatus(
         uint64 attemptId,
         OnePProtocol.Status newStatus
     ) external onlyVerifier {
-        require(
-            newStatus == OnePProtocol.Status.Success ||
-                newStatus == OnePProtocol.Status.Failed,
-            "Invalid status"
-        );
-
         OnePProtocol.Attempt storage att = attemptRegistry[attemptId];
-        require(
-            att.status == OnePProtocol.Status.InProgress,
-            "Not in progress"
-        );
-        require(!OnePProtocol.isAttemptExpired(att), "Expired");
 
+        // Validate status transition is progressive
+        require(
+            OnePProtocol.isStatusProgressive(att.status, newStatus),
+            "Status must be progressive"
+        );
+
+        // Validate specific status transitions
+        require(
+            OnePProtocol.validateStatusTransition(att.status, newStatus),
+            "Invalid status transition"
+        );
+
+        require(!OnePProtocol.isAttemptExpired(att), "Attempt expired");
+
+        // Update status
         att.status = newStatus;
         emit AttemptUpdated(attemptId, newStatus);
 
-        // Update user state using library functions
-        OnePProtocol.UserState storage state = userStateRegistry[att.onePUser];
-        bool isSuccess = (newStatus == OnePProtocol.Status.Success);
+        // Only update user state for final statuses (Success or Failed)
+        if (
+            newStatus == OnePProtocol.Status.Success ||
+            newStatus == OnePProtocol.Status.Failed
+        ) {
+            OnePProtocol.UserState storage state = userStateRegistry[
+                att.onePUser
+            ];
+            bool isSuccess = (newStatus == OnePProtocol.Status.Success);
 
-        // Update state based on attempt result
-        state.totalAttempts++;
-        uint64 nowTs = uint64(block.timestamp);
+            // Update state based on attempt result
+            uint64 nowTs = uint64(block.timestamp);
 
-        if (isSuccess) {
-            state.successCount++;
-            // Reduce difficulty on success
-            state.d = state.d > 1 ? state.d - 1 : 1;
-        } else {
-            state.failureCount++;
-            if (state.firstFailureTs == 0) {
-                state.firstFailureTs = nowTs;
+            if (isSuccess) {
+                state.successCount++;
+                // Reduce difficulty on success
+                state.d = state.d > 1 ? state.d - 1 : 1;
+            } else {
+                state.failureCount++;
+                if (state.firstFailureTs == 0) {
+                    state.firstFailureTs = nowTs;
+                }
+                state.lastFailureTs = nowTs;
+
+                // Check for high abuse mode
+                if (
+                    OnePProtocol.shouldEnterHighAbuse(
+                        state.failureCount,
+                        state.firstFailureTs,
+                        nowTs
+                    )
+                ) {
+                    state.highAbuse = true;
+                }
+
+                // Increase difficulty
+                state.d = OnePProtocol.calculateNewDifficulty(
+                    state.d,
+                    state.highAbuse,
+                    false
+                );
             }
-            state.lastFailureTs = nowTs;
-
-            // Check for high abuse mode
-            if (
-                OnePProtocol.shouldEnterHighAbuse(
-                    state.failureCount,
-                    state.firstFailureTs,
-                    nowTs
-                )
-            ) {
-                state.highAbuse = true;
-            }
-
-            // Increase difficulty
-            state.d = OnePProtocol.calculateNewDifficulty(
-                state.d,
-                state.highAbuse,
-                false
-            );
         }
     }
 
