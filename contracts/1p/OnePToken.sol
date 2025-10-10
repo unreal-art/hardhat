@@ -43,10 +43,7 @@ contract OnePToken is
      * @param _initialSupply Initial token supply to mint
      * @param _cap Maximum token supply cap
      */
-    function initialize(
-        uint256 _initialSupply,
-        uint256 _cap
-    ) public initializer {
+    function initializeToken(uint256 _initialSupply, uint256 _cap) public {
         string memory name_ = "1P Token";
         string memory symbol_ = "1P";
 

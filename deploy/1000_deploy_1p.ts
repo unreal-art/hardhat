@@ -37,8 +37,9 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
           init: {
             methodName: "initialize",
             args: [
-              ethers.parseEther("10000000"), // 10M initial supply
-              ethers.parseEther("100000000")  // 100M max supply
+              verifier,
+              // ethers.parseEther("10000000"), // 10M initial supply
+              // ethers.parseEther("100000000")  // 100M max supply
             ]
           }
         }
@@ -46,14 +47,13 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       log: true,
     })
 
-    // Initialize the OneP protocol with verifier
     await execute(
       "OneP",
       {
         from: admin,
         log: true,
       },
-      "initializeOneP",
+      "initialize",
       verifier
     )
 
