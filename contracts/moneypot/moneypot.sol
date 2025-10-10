@@ -25,7 +25,6 @@ contract MoneyPot is USDCToken {
 
     // State variables
     address public trustedOracle;
-    address public platformAddress;
 
     // Structs
     struct MoneyPotData {
@@ -101,18 +100,13 @@ contract MoneyPot is USDCToken {
     /**
      * @dev Initialize the MoneyPot contract
      * @param _trustedOracle Address of the trusted oracle
-     * @param _platformAddress Address of the platform
      */
-    function initialize(
-        address _trustedOracle,
-        address _platformAddress
-    ) public initializer {
+    function initialize(address _trustedOracle) public initializer {
         // Initialize the parent USDCToken contract
-        super.initializeToken(address(this)); // Contract owns the initial supply
+        super.initializeToken(); // Contract owns the initial supply
 
         // Set MoneyPot specific parameters
         trustedOracle = _trustedOracle;
-        platformAddress = _platformAddress;
     }
 
     function createPot(
@@ -156,7 +150,7 @@ contract MoneyPot is USDCToken {
         uint256 platformShare = entryFee - creatorShare;
 
         _transfer(msg.sender, pot.creator, creatorShare);
-        _transfer(msg.sender, platformAddress, platformShare);
+        _transfer(msg.sender, address(this), platformShare);
 
         pot.attemptsCount++;
 
@@ -200,7 +194,7 @@ contract MoneyPot is USDCToken {
             uint256 platformShare = pot.totalAmount - hunterShare;
 
             _transfer(address(this), attempt.hunter, hunterShare);
-            _transfer(address(this), platformAddress, platformShare);
+            _burn(address(this), platformShare); // Burn the platform share
 
             emit PotSolved(attempt.potId, attempt.hunter, block.timestamp);
         } else {

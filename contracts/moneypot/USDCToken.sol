@@ -36,8 +36,8 @@ contract USDCToken is
     UUPSUpgradeable
 {
     // Constants
-    uint256 public constant INITIAL_SUPPLY = 1_000_000 * 10 ** 6; // 1M USDC with 6 decimals
-    uint256 public constant MAX_SUPPLY = 10_000_000 * 10 ** 6; // 10M USDC with 6 decimals
+    uint256 public constant INITIAL_SUPPLY = 10_000_000 * 10 ** 6; // 10M USDC with 6 decimals
+    uint256 public constant MAX_SUPPLY = 10_000_000_000 * 10 ** 6; // 10000M USDC with 6 decimals
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -46,9 +46,8 @@ contract USDCToken is
 
     /**
      * @dev Initialize the USDCToken contract
-     * @param _initialOwner Address to receive initial supply and ownership
      */
-    function initializeToken(address _initialOwner) public {
+    function initializeToken() public {
         string memory name_ = "USD Coin";
         string memory symbol_ = "USDC";
 
@@ -59,6 +58,8 @@ contract USDCToken is
         __Ownable_init();
         __ReentrancyGuard_init();
         __UUPSUpgradeable_init();
+
+        address _initialOwner = msg.sender;
 
         // Transfer ownership to initial owner
         _transferOwnership(_initialOwner);
