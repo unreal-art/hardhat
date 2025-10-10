@@ -44,7 +44,7 @@ contract OnePToken is
      * @param _cap Maximum token supply cap
      */
     function initializeToken(uint256 _initialSupply, uint256 _cap) public {
-        string memory name_ = "1P Token";
+        string memory name_ = "1P";
         string memory symbol_ = "1P";
 
         __ERC20_init(name_, symbol_);

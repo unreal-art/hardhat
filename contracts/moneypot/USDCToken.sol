@@ -48,7 +48,8 @@ contract USDCToken is
      * @dev Initialize the USDCToken contract
      */
     function initializeToken() public {
-        string memory name_ = "USD Coin";
+        // cuz we are using integrated Token+Contract method
+        string memory name_ = "Money Pot";
         string memory symbol_ = "USDC";
 
         __ERC20_init(name_, symbol_);
