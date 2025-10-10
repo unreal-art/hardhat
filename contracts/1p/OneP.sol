@@ -178,7 +178,7 @@ contract OneP is OnePToken {
      * @param attemptId ID of the attempt to update
      * @param newStatus New status (Success or Failed)
      */
-    function updateAttempt(
+    function updateAttemptStatus(
         uint64 attemptId,
         OnePProtocol.Status newStatus
     ) external onlyVerifier {
