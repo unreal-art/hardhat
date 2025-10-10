@@ -78,7 +78,7 @@ contract MoneyPotManager is ReentrancyGuard {
     // Errors
     error InvalidFee();
     error PotNotActive();
-    error PotExpired();
+    error ExpiredPot();
     error NotExpired();
     error AttemptExpired();
     error AttemptCompleted();
@@ -127,7 +127,7 @@ contract MoneyPotManager is ReentrancyGuard {
         MoneyPot storage pot = pots[potId];
 
         if (!pot.isActive) revert PotNotActive();
-        if (block.timestamp >= pot.expiresAt) revert PotExpired();
+        if (block.timestamp >= pot.expiresAt) revert ExpiredPot();
 
         uint256 entryFee = pot.fee;
         uint256 creatorShare = (entryFee * CREATOR_ENTRY_FEE_SHARE_PERCENT) /
