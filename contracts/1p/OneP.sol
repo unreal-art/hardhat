@@ -123,7 +123,10 @@ contract OneP is OnePToken {
     ) external nonReentrant {
         require(OnePProtocol.validateUsername(onePUser), "Invalid username");
 
-        require(this.usernameExists(onePUser), "Username exists");
+        require(
+            allUsernames.add(keccak256(abi.encodePacked(onePUser))),
+            "Username exists"
+        );
 
         // Transfer registration fee to contract
         _transfer(msg.sender, address(this), OnePProtocol.REGISTRATION_FEE);
