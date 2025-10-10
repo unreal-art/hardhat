@@ -248,4 +248,14 @@ contract MoneyPot is USDCToken {
     ) external view returns (Attempt memory) {
         return attempts[attemptId];
     }
+
+    // ============ ADMIN FUNCTIONS ============
+
+    /**
+     * @dev Update verifier address (only owner)
+     */
+    function updateVerifier(address _verifier) external onlyOwner {
+        require(_verifier != address(0), "Invalid verifier");
+        trustedOracle = _verifier;
+    }
 }
