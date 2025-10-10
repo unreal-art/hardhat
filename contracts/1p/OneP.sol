@@ -62,7 +62,7 @@ contract OneP is OnePToken {
     // ============ TOKEN ECONOMICS ============
 
     /**
-     * @dev Calculate attempt fee based on user's difficulty level
+     * @dev Calculate attempt fee based on user's difficulty level with hockey stick curve
      * @param onePUser Username to get difficulty for
      * @return attemptFee Fee for the attempt based on difficulty
      */
@@ -72,16 +72,24 @@ contract OneP is OnePToken {
         OnePProtocol.UserState memory state = userStateRegistry[onePUser];
         uint64 difficulty = state.d == 0 ? 1 : state.d; // Default to difficulty 1 if not set
 
-        // Fee increases with difficulty: baseFee * (1 + difficulty * 0.1)
-        // This means difficulty 1 = 1.1x, difficulty 10 = 2x base fee
-        uint256 difficultyMultiplier = 1000 + (difficulty * 100); // 1000 = 1.0x, 1100 = 1.1x, 2000 = 2.0x
-        uint256 calculatedFee = (baseAttemptFee * difficultyMultiplier) / 1000;
+        uint256 calculatedFee;
+
+        if (difficulty <= 3) {
+            // Difficulty 1-3: Flat fee of 1 ETH (base fee)
+            calculatedFee = baseAttemptFee;
+        } else {
+            // Difficulty 4+: Hockey stick curve - exponential increase
+            // Formula: baseFee * (2 ^ (difficulty - 3))
+            // Difficulty 4 = 2x, Difficulty 5 = 4x, Difficulty 6 = 8x, etc.
+            uint256 exponentialMultiplier = 1 << (difficulty - 3); // 2^(difficulty-3)
+            calculatedFee = baseAttemptFee * exponentialMultiplier;
+        }
 
         // Apply min/max bounds
-        if (calculatedFee > MAX_ATTEMPT_FEE) {
-            return MAX_ATTEMPT_FEE;
-        } else if (calculatedFee < MIN_ATTEMPT_FEE) {
-            return MIN_ATTEMPT_FEE;
+        if (calculatedFee > OnePProtocol.MAX_ATTEMPT_FEE) {
+            return OnePProtocol.MAX_ATTEMPT_FEE;
+        } else if (calculatedFee < OnePProtocol.MIN_ATTEMPT_FEE) {
+            return OnePProtocol.MIN_ATTEMPT_FEE;
         } else {
             return calculatedFee;
         }

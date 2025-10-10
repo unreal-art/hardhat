@@ -33,10 +33,6 @@ contract OnePToken is
     ReentrancyGuardUpgradeable,
     UUPSUpgradeable
 {
-    // Token Economics Constants
-    uint256 public constant MAX_ATTEMPT_FEE = 2 ether; // Maximum cost per attempt
-    uint256 public constant MIN_ATTEMPT_FEE = 0.01 ether; // Minimum cost per attempt
-
     // Fee Configuration
     uint256 public baseAttemptFee; // Base fee for attempts
 

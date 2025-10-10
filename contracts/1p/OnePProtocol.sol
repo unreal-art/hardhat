@@ -17,10 +17,15 @@ library OnePProtocol {
     uint256 constant REGISTRATION_FEE = 100 ether; // 100 $1P tokens for registration
 
     uint64 constant ATTEMPT_EXPIRY_DURATION = 600; // 10 minutes
+
     // Fee splitting percentages (basis points: 10000 = 100%)
     uint256 constant ATTEMPT_FEE_USER_SHARE = 4000; // 40%
     uint256 constant ATTEMPT_FEE_VERIFIER_SHARE = 4000; // 40%
     uint256 constant ATTEMPT_FEE_PLATFORM_SHARE = 2000; // 20%
+
+    // Token Economics Constants
+    uint256 public constant MAX_ATTEMPT_FEE = 1 ether; // Maximum cost per attempt
+    uint256 public constant MIN_ATTEMPT_FEE = 0.01 ether; // Minimum cost per attempt
 
     // ============ ENUMS ============
 
