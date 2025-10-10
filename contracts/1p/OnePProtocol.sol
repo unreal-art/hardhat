@@ -16,6 +16,11 @@ library OnePProtocol {
     uint64 constant MAX_ROUNDS = 30;
     uint256 constant REGISTRATION_FEE = 100 ether; // 100 $1P tokens for registration
 
+    // Fee splitting percentages (basis points: 10000 = 100%)
+    uint256 constant ATTEMPT_FEE_USER_SHARE = 4000; // 40%
+    uint256 constant ATTEMPT_FEE_VERIFIER_SHARE = 4000; // 40%
+    uint256 constant ATTEMPT_FEE_PLATFORM_SHARE = 2000; // 20%
+
     // ============ ENUMS ============
 
     enum Status {
@@ -349,6 +354,36 @@ library OnePProtocol {
         uint64 difficulty
     ) internal pure returns (uint64 rounds) {
         return difficulty + (difficulty / 2); // r = d + floor(d/2)
+    }
+
+    /**
+     * @dev Calculate fee splits with proper rounding handling
+     * @param totalFee Total fee to split
+     * @return userShare User's share of the fee
+     * @return verifierShare Verifier's share of the fee
+     * @return platformShare Platform's share of the fee
+     */
+    function calculateFeeSplits(
+        uint256 totalFee
+    )
+        internal
+        pure
+        returns (
+            uint256 userShare,
+            uint256 verifierShare,
+            uint256 platformShare
+        )
+    {
+        // Calculate shares using basis points to avoid rounding issues
+        userShare = (totalFee * ATTEMPT_FEE_USER_SHARE) / 10000;
+        verifierShare = (totalFee * ATTEMPT_FEE_VERIFIER_SHARE) / 10000;
+        platformShare = (totalFee * ATTEMPT_FEE_PLATFORM_SHARE) / 10000;
+
+        // Handle any remainder due to rounding by adding it to platform share
+        uint256 totalSplit = userShare + verifierShare + platformShare;
+        if (totalSplit < totalFee) {
+            platformShare += (totalFee - totalSplit);
+        }
     }
 
     /**

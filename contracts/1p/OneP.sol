@@ -131,20 +131,17 @@ contract OneP is OnePToken {
         OnePProtocol.UserProfile storage profile = usernameRegistry[onePUser];
 
         uint256 currentFee = getAttemptFee();
-        uint256 userShare = (currentFee * 40) / 100;
-        uint256 verifierShare = (currentFee * 40) / 100;
-        uint256 platFormShare = (currentFee * 20) / 100;
+        (
+            uint256 userShare,
+            uint256 verifierShare,
+            uint256 platformShare
+        ) = OnePProtocol.calculateFeeSplits(currentFee);
 
-        require(
-            userShare + verifierShare + platFormShare == currentFee,
-            "unable to split fee"
-        );
-
-        _transfer(msg.sender, address(this), platFormShare);
+        _transfer(msg.sender, address(this), platformShare);
         _transfer(msg.sender, profile.account, userShare);
         _transfer(msg.sender, verifier, verifierShare);
 
-        _burn(address(this), platFormShare); // Burn the attempt fee
+        _burn(address(this), platformShare); // Burn the platform share
 
         // Update user state
         OnePProtocol.UserState storage state = userStateRegistry[onePUser];
@@ -286,15 +283,6 @@ contract OneP is OnePToken {
         string memory onePUser
     ) external view returns (OnePProtocol.UserProfile memory) {
         return usernameRegistry[onePUser];
-    }
-
-    /**
-     * @dev Get user profile by username
-     */
-    function getOnePUser(
-        string memory onePUser
-    ) external view returns (OnePProtocol.UserProfile memory) {
-        return this.getUserProfile(onePUser);
     }
 
     /**
