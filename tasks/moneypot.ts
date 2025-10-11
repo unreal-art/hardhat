@@ -6,6 +6,7 @@ import { getAccount } from "../utils/accounts";
 // Helper function to connect to MoneyPot contract
 async function connectMoneyPot(hre: any) {
   const deployment = await hre.deployments.get("MoneyPot");
+  console.log("MoneyPot deployment: ", deployment.address);
   const factory = await hre.ethers.getContractFactory("MoneyPot");
   const contract = factory.attach(deployment.address) as unknown as MoneyPot;
   return contract;
