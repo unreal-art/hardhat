@@ -209,6 +209,7 @@ const config: _Config = {
   etherscan: {
     apiKey: {
       torusM: "empty",
+      cc: "empty",
       default: process.env.ETHERSCAN_API_KEY,
     },
 
@@ -228,6 +229,15 @@ const config: _Config = {
         urls: {
           apiURL: "https://toruscan.com/api",
           browserURL: "http://toruscan.com",
+        },
+      },
+
+      {
+        network: "cc",
+        chainId: 102031,
+        urls: {
+          apiURL: "https://creditcoin-testnet.blockscout.com/api",
+          browserURL: "https://creditcoin-testnet.blockscout.com",
         },
       },
     ],
