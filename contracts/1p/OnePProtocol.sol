@@ -353,6 +353,7 @@ library OnePProtocol {
             }
         }
 
+        state.totalAttempts++;
         // Always update difficulty using bonding curve based on current state
         state.d = calculateDifficultyBondingCurve(
             state.totalAttempts,
@@ -360,9 +361,6 @@ library OnePProtocol {
             state.failureCount,
             state.highAbuse
         );
-
-        // Increment total attempts after calculating difficulty
-        state.totalAttempts++;
 
         return state;
     }
