@@ -12,8 +12,8 @@ pragma solidity ^0.8.20;
  */
 library OnePProtocol {
     // ============ CONSTANTS ============
-
-    uint64 constant MAX_ROUNDS = 10;
+    uint64 constant MIN_ROUNDS = 2;
+    uint64 constant MAX_ROUNDS = 11;
     uint256 constant REGISTRATION_FEE = 100 ether; // 100 $1P tokens for registration
 
     uint64 constant ATTEMPT_EXPIRY_DURATION = 600; // 10 minutes
@@ -150,7 +150,10 @@ library OnePProtocol {
     ) internal pure returns (uint64 newDifficulty) {
         if (isSuccess) {
             // On success, maintain or slightly reduce difficulty
-            return currentDifficulty > 1 ? currentDifficulty - 1 : 1;
+            return
+                currentDifficulty > MIN_ROUNDS
+                    ? currentDifficulty - 1
+                    : MIN_ROUNDS;
         } else {
             // On failure, increase difficulty
             if (isHighAbuse) {
@@ -253,7 +256,7 @@ library OnePProtocol {
                 failureCount: 0,
                 firstFailureTs: 0,
                 lastFailureTs: 0,
-                d: 1, // Start with difficulty 1
+                d: MIN_ROUNDS, // Start with minimum difficulty
                 highAbuse: false
             });
     }
@@ -274,7 +277,7 @@ library OnePProtocol {
         if (isSuccess) {
             state.successCount++;
             // Reduce difficulty on success
-            state.d = state.d > 1 ? state.d - 1 : 1;
+            state.d = state.d > MIN_ROUNDS ? state.d - 1 : MIN_ROUNDS;
         } else {
             state.failureCount++;
             if (state.firstFailureTs == 0) {

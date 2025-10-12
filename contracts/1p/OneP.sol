@@ -69,7 +69,7 @@ contract OneP is OnePToken {
         string memory onePUser
     ) public view returns (uint256 attemptFee) {
         OnePProtocol.UserState memory state = userStateRegistry[onePUser];
-        uint64 difficulty = state.d == 0 ? 1 : state.d; // Default to difficulty 1 if not set
+        uint64 difficulty = state.d == 0 ? OnePProtocol.MIN_ROUNDS : state.d; // Default to MIN_ROUNDS if not set
 
         // Mathematical bonding curve: exponential growth with controlled bounds
         // Formula: minFee + (maxFee - minFee) * (difficulty^2.5) / (MAX_ROUNDS^2.5)
@@ -194,7 +194,7 @@ contract OneP is OnePToken {
         // Update user state
         OnePProtocol.UserState storage state = userStateRegistry[onePUser];
         if (state.d == 0) {
-            state.d = 1;
+            state.d = OnePProtocol.MIN_ROUNDS;
         }
 
         state.totalAttempts++;
@@ -259,7 +259,9 @@ contract OneP is OnePToken {
             if (isSuccess) {
                 state.successCount++;
                 // Reduce difficulty on success
-                state.d = state.d > 1 ? state.d - 1 : 1;
+                state.d = state.d > OnePProtocol.MIN_ROUNDS
+                    ? state.d - 1
+                    : OnePProtocol.MIN_ROUNDS;
             } else {
                 state.failureCount++;
                 if (state.firstFailureTs == 0) {
