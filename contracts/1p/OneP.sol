@@ -220,6 +220,8 @@ contract OneP is OnePToken {
             // Update state based on attempt result
             uint64 nowTs = uint64(block.timestamp);
 
+            state.totalAttempts++;
+
             if (isSuccess) {
                 state.successCount++;
             } else {
@@ -241,16 +243,12 @@ contract OneP is OnePToken {
                 }
             }
 
-            // Always update difficulty using bonding curve based on current state
             state.d = OnePProtocol.calculateDifficultyBondingCurve(
                 state.totalAttempts,
                 state.successCount,
                 state.failureCount,
                 state.highAbuse
             );
-
-            // Increment total attempts after calculating difficulty
-            state.totalAttempts++;
         }
     }
 

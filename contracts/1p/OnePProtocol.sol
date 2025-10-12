@@ -177,7 +177,7 @@ library OnePProtocol {
             // High abuse mode: multiply by 2 and cap at MAX_ROUNDS
             calculatedDifficulty = calculatedDifficulty * 2;
             if (calculatedDifficulty > MAX_ROUNDS) {
-                calculatedDifficulty = MAX_ROUNDS;
+                return MAX_ROUNDS;
             }
         }
 
