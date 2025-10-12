@@ -137,31 +137,90 @@ library OnePProtocol {
     // ============ DIFFICULTY CALCULATION ============
 
     /**
-     * @dev Calculate new difficulty based on attempt result
-     * @param currentDifficulty Current difficulty level
+     * @dev Calculate difficulty using bonding curve based on user's success/failure ratio
+     * @param totalAttempts Total number of attempts made
+     * @param successCount Number of successful attempts
+     * @param isHighAbuse Whether user is in high abuse mode
+     * @return difficulty Calculated difficulty level
+     */
+    function calculateDifficultyBondingCurve(
+        uint64 totalAttempts,
+        uint64 successCount,
+        uint64 /* failureCount */,
+        bool isHighAbuse
+    ) internal pure returns (uint64 difficulty) {
+        if (totalAttempts == 0) {
+            return MIN_ROUNDS;
+        }
+
+        // Calculate success rate (0 to 1, scaled to 10000 for precision)
+        uint256 successRate = (uint256(successCount) * 10000) /
+            uint256(totalAttempts);
+
+        // Base difficulty calculation using inverse relationship with success rate
+        // Higher success rate = lower difficulty, but with exponential scaling
+        // Formula: MIN_ROUNDS + (MAX_ROUNDS - MIN_ROUNDS) * ((10000 - successRate) / 10000)^2.5
+
+        uint256 inverseSuccessRate = 10000 - successRate;
+        uint256 curveExponent = (inverseSuccessRate * inverseSuccessRate) /
+            10000; // ^2
+        curveExponent = (curveExponent * inverseSuccessRate) / 10000; // ^3
+        curveExponent = curveExponent / 2; // Approximate ^2.5
+
+        uint256 difficultyRange = MAX_ROUNDS - MIN_ROUNDS;
+        uint256 calculatedDifficulty = MIN_ROUNDS +
+            (difficultyRange * curveExponent) /
+            10000;
+
+        // Apply high abuse multiplier (exponential penalty)
+        if (isHighAbuse) {
+            // High abuse mode: multiply by 2 and cap at MAX_ROUNDS
+            calculatedDifficulty = calculatedDifficulty * 2;
+            if (calculatedDifficulty > MAX_ROUNDS) {
+                calculatedDifficulty = MAX_ROUNDS;
+            }
+        }
+
+        // Ensure we stay within bounds
+        if (calculatedDifficulty < MIN_ROUNDS) {
+            return MIN_ROUNDS;
+        } else if (calculatedDifficulty > MAX_ROUNDS) {
+            return MAX_ROUNDS;
+        } else {
+            return uint64(calculatedDifficulty);
+        }
+    }
+
+    /**
+     * @dev Calculate new difficulty based on attempt result using bonding curve
+     * @param totalAttempts Total number of attempts made
+     * @param successCount Number of successful attempts
+     * @param failureCount Number of failed attempts
      * @param isHighAbuse Whether user is in high abuse mode
      * @param isSuccess Whether attempt was successful
      * @return newDifficulty New difficulty level
      */
     function calculateNewDifficulty(
-        uint64 currentDifficulty,
+        uint64 /* currentDifficulty */,
+        uint64 totalAttempts,
+        uint64 successCount,
+        uint64 failureCount,
         bool isHighAbuse,
         bool isSuccess
     ) internal pure returns (uint64 newDifficulty) {
-        if (isSuccess) {
-            // On success, maintain or slightly reduce difficulty
-            return
-                currentDifficulty > MIN_ROUNDS
-                    ? currentDifficulty - 1
-                    : MIN_ROUNDS;
-        } else {
-            // On failure, increase difficulty
-            if (isHighAbuse) {
-                return min(MAX_ROUNDS, currentDifficulty * 2);
-            } else {
-                return min(MAX_ROUNDS, currentDifficulty + 1);
-            }
-        }
+        // Update counts for the current attempt
+        uint64 newTotalAttempts = totalAttempts + 1;
+        uint64 newSuccessCount = isSuccess ? successCount + 1 : successCount;
+        uint64 newFailureCount = isSuccess ? failureCount : failureCount + 1;
+
+        // Calculate new difficulty using bonding curve
+        return
+            calculateDifficultyBondingCurve(
+                newTotalAttempts,
+                newSuccessCount,
+                newFailureCount,
+                isHighAbuse
+            );
     }
 
     /**
@@ -271,13 +330,10 @@ library OnePProtocol {
         UserState memory state,
         bool isSuccess
     ) internal view returns (UserState memory updatedState) {
-        state.totalAttempts++;
         uint64 nowTs = uint64(block.timestamp);
 
         if (isSuccess) {
             state.successCount++;
-            // Reduce difficulty on success
-            state.d = state.d > MIN_ROUNDS ? state.d - 1 : MIN_ROUNDS;
         } else {
             state.failureCount++;
             if (state.firstFailureTs == 0) {
@@ -295,10 +351,18 @@ library OnePProtocol {
             ) {
                 state.highAbuse = true;
             }
-
-            // Increase difficulty
-            state.d = calculateNewDifficulty(state.d, state.highAbuse, false);
         }
+
+        // Always update difficulty using bonding curve based on current state
+        state.d = calculateDifficultyBondingCurve(
+            state.totalAttempts,
+            state.successCount,
+            state.failureCount,
+            state.highAbuse
+        );
+
+        // Increment total attempts after calculating difficulty
+        state.totalAttempts++;
 
         return state;
     }

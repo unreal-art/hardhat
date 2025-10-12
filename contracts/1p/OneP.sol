@@ -258,10 +258,6 @@ contract OneP is OnePToken {
 
             if (isSuccess) {
                 state.successCount++;
-                // Reduce difficulty on success
-                state.d = state.d > OnePProtocol.MIN_ROUNDS
-                    ? state.d - 1
-                    : OnePProtocol.MIN_ROUNDS;
             } else {
                 state.failureCount++;
                 if (state.firstFailureTs == 0) {
@@ -279,14 +275,18 @@ contract OneP is OnePToken {
                 ) {
                     state.highAbuse = true;
                 }
-
-                // Increase difficulty
-                state.d = OnePProtocol.calculateNewDifficulty(
-                    state.d,
-                    state.highAbuse,
-                    false
-                );
             }
+
+            // Always update difficulty using bonding curve based on current state
+            state.d = OnePProtocol.calculateDifficultyBondingCurve(
+                state.totalAttempts,
+                state.successCount,
+                state.failureCount,
+                state.highAbuse
+            );
+
+            // Increment total attempts after calculating difficulty
+            state.totalAttempts++;
         }
     }
 
