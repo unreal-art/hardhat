@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/utils/math/Math.sol";
+
 /**
  * @title OnePProtocol
  * @dev Library containing all 1P Protocol logic and data structures
@@ -15,6 +17,7 @@ library OnePProtocol {
     uint64 constant MIN_ROUNDS = 2;
     uint64 constant MAX_ROUNDS = 11;
     uint256 constant REGISTRATION_FEE = 100 ether; // 100 $1P tokens for registration
+    uint256 constant SCALE = 10000; // Fixed-point scaling factor for precision
 
     uint64 constant ATTEMPT_EXPIRY_DURATION = 600; // 10 minutes
 
@@ -153,24 +156,32 @@ library OnePProtocol {
             return MIN_ROUNDS;
         }
 
-        // Calculate success rate (0 to 1, scaled to 10000 for precision)
-        uint256 successRate = (uint256(successCount) * 10000) /
+        // Calculate success rate (0 to 1, scaled to SCALE for precision)
+        uint256 successRate = (uint256(successCount) * SCALE) /
             uint256(totalAttempts);
 
         // Base difficulty calculation using inverse relationship with success rate
         // Higher success rate = lower difficulty, but with exponential scaling
-        // Formula: MIN_ROUNDS + (MAX_ROUNDS - MIN_ROUNDS) * ((10000 - successRate) / 10000)^2.5
+        // Formula: MIN_ROUNDS + (MAX_ROUNDS - MIN_ROUNDS) * ((SCALE - successRate) / SCALE)^2.5
+        // Using integer-safe computation: x^2.5 = x^2 * sqrt(x) with fixed-point scaling
 
-        uint256 inverseSuccessRate = 10000 - successRate;
-        uint256 curveExponent = (inverseSuccessRate * inverseSuccessRate) /
-            10000; // ^2
-        curveExponent = (curveExponent * inverseSuccessRate) / 10000; // ^3
-        curveExponent = curveExponent / 2; // Approximate ^2.5
+        uint256 inverseSuccessRate = SCALE - successRate;
+
+        // Compute x^2 with scaling: sq = (inverseSuccessRate * inverseSuccessRate) / SCALE
+        uint256 sq = (inverseSuccessRate * inverseSuccessRate) / SCALE;
+
+        // Compute sqrt(x) with scaling: root = sqrt(inverseSuccessRate * SCALE) / sqrt(SCALE)
+        // This gives us sqrt(x) scaled by sqrt(SCALE)
+        uint256 scaledValue = inverseSuccessRate * SCALE;
+        uint256 root = Math.sqrt(scaledValue);
+
+        // Compute x^2.5 = (sq * root) / SCALE to maintain consistent scaling
+        uint256 curveExponent = (sq * root) / SCALE;
 
         uint256 difficultyRange = MAX_ROUNDS - MIN_ROUNDS;
         uint256 calculatedDifficulty = MIN_ROUNDS +
             (difficultyRange * curveExponent) /
-            10000;
+            SCALE;
 
         // Apply high abuse multiplier (exponential penalty)
         if (isHighAbuse) {
