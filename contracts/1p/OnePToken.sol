@@ -137,7 +137,7 @@ contract OnePToken is
     }
 
     /**
-     * @dev Override decimals to return 6 (standard for USDC)
+     * @dev Override decimals to return 18 (standard for $1P)
      */
     function decimals() public pure override returns (uint8) {
         return 18;
