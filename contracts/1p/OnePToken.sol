@@ -101,7 +101,8 @@ contract OnePToken is
     }
 
     /**
-     * @dev Burn tokens from account (only owner)
+     * @dev Burn tokens from account
+     * @notice Only the owner of the token or the token holder can burn tokens
      * @param from Address to burn tokens from
      * @param amount Amount of tokens to burn
      */
