@@ -53,8 +53,8 @@ contract OnePToken is
 
     function _initializeToken(uint256 _initialSupply, uint256 _cap) internal {
         // cuz we are using integrated Token+Contract method
-        string memory name_ = "Money Pot";
-        string memory symbol_ = "USDC";
+        string memory name_ = "1P Token";
+        string memory symbol_ = "1P";
 
         __ERC20_init(name_, symbol_);
         __ERC20Permit_init(name_);
