@@ -69,41 +69,7 @@ contract OneP is OnePToken {
         string memory onePUser
     ) public view returns (uint256 attemptFee) {
         OnePProtocol.UserState memory state = userStateRegistry[onePUser];
-
-        uint64 successCount = state.successCount;
-        uint64 failureCount = state.failureCount;
-
-        // If no attempts yet, use minimum fee
-        if (successCount == 0 && failureCount == 0) {
-            return OnePProtocol.MIN_ATTEMPT_FEE;
-        }
-
-        // Polymarket-style bonding curve: failureCount^2 / (failureCount^2 + successCount)
-        // This creates higher fees for users with more failures
-        // Using left shift for gas efficiency instead of squaring
-
-        uint256 failureCountSquared = uint256(failureCount) << 1; // Equivalent to failureCount * 2
-        uint256 denominator = failureCountSquared + uint256(successCount);
-
-        // Calculate fee ratio (0 to 1, scaled to 10000 for precision)
-        uint256 feeRatio = (failureCountSquared * 10000) / denominator;
-
-        // Apply fee range: MIN_ATTEMPT_FEE to MAX_ATTEMPT_FEE
-        uint256 minFee = OnePProtocol.MIN_ATTEMPT_FEE;
-        uint256 maxFee = OnePProtocol.MAX_ATTEMPT_FEE;
-        uint256 feeRange = maxFee - minFee;
-
-        // Calculate fee: minFee + (feeRange * feeRatio / 10000)
-        uint256 calculatedFee = minFee + (feeRange * feeRatio) / 10000;
-
-        // Ensure we stay within bounds
-        if (calculatedFee > maxFee) {
-            return maxFee;
-        } else if (calculatedFee < minFee) {
-            return minFee;
-        } else {
-            return calculatedFee;
-        }
+        return OnePProtocol.calcAttemptFee(state);
     }
 
     // ============ 1P PROTOCOL FUNCTIONS ============

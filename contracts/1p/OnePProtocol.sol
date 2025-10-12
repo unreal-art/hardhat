@@ -370,27 +370,42 @@ library OnePProtocol {
     // ============ FEE CALCULATION ============
 
     /**
-     * @dev Calculate dynamic attempt fee based on bonding curve
-     * @param baseFee Base fee for attempts
-     * @param feeMultiplier Multiplier for bonding curve
-     * @param totalSupply Current total token supply
-     * @param maxCost Maximum cost per attempt
-     * @param minCost Minimum cost per attempt
+     * @dev Calculate attempt fee using Polymarket-style bonding curve
+     * @param state User state containing success/failure counts
      * @return fee Calculated attempt fee
      */
-    function calculateAttemptFee(
-        uint256 baseFee,
-        uint256 feeMultiplier,
-        uint256 totalSupply,
-        uint256 maxCost,
-        uint256 minCost
+    function calcAttemptFee(
+        UserState memory state
     ) internal pure returns (uint256 fee) {
-        uint256 calculatedFee = baseFee + (totalSupply / 1e18) * feeMultiplier;
+        uint64 successCount = state.successCount;
+        uint64 failureCount = state.failureCount;
 
-        if (calculatedFee > maxCost) {
-            return maxCost;
-        } else if (calculatedFee < minCost) {
-            return minCost;
+        // If no attempts yet, use minimum fee
+        if (successCount == 0 && failureCount == 0) {
+            return MIN_ATTEMPT_FEE;
+        }
+
+        // Polymarket-style bonding curve: failureCount^2 / (failureCount^2 + successCount)
+        // This creates higher fees for users with more failures
+        // Using left shift for gas efficiency instead of squaring
+
+        uint256 failureCountSquared = uint256(failureCount) << 1; // Equivalent to failureCount * 2
+        uint256 denominator = failureCountSquared + uint256(successCount);
+
+        // Calculate fee ratio (0 to 1, scaled to 10000 for precision)
+        uint256 feeRatio = (failureCountSquared * 10000) / denominator;
+
+        // Apply fee range: MIN_ATTEMPT_FEE to MAX_ATTEMPT_FEE
+        uint256 feeRange = MAX_ATTEMPT_FEE - MIN_ATTEMPT_FEE;
+
+        // Calculate fee: minFee + (feeRange * feeRatio / 10000)
+        uint256 calculatedFee = MIN_ATTEMPT_FEE + (feeRange * feeRatio) / 10000;
+
+        // Ensure we stay within bounds
+        if (calculatedFee > MAX_ATTEMPT_FEE) {
+            return MAX_ATTEMPT_FEE;
+        } else if (calculatedFee < MIN_ATTEMPT_FEE) {
+            return MIN_ATTEMPT_FEE;
         } else {
             return calculatedFee;
         }
