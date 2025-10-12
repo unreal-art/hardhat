@@ -24,7 +24,10 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   let moneyPot: MoneyPot
 
-  if (await deployer("MoneyPot", hre)) {
+  // Check if MoneyPot is already deployed
+  const existingDeployment = await hre.deployments.getOrNull("MoneyPot")
+
+  if (!existingDeployment) {
     console.log("Deploying MoneyPot Contract....💰🎯")
     
     // Deploy the MoneyPot contract with token initialization
