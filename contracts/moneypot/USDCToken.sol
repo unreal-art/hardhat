@@ -47,7 +47,7 @@ contract USDCToken is
     /**
      * @dev Initialize the USDCToken contract
      */
-    function initializeToken() external initializer {
+    function initializeToken() external virtual initializer {
         _initializeToken();
     }
 

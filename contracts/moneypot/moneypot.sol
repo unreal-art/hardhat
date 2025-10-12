@@ -97,12 +97,20 @@ contract MoneyPot is USDCToken {
     }
 
     /**
+     * @dev Override initializeToken to prevent direct external calls
+     * @notice This function reverts to prevent unauthorized initialization
+     */
+    function initializeToken() external override {
+        revert("Use initialize(address)");
+    }
+
+    /**
      * @dev Initialize the MoneyPot contract
      * @param _trustedOracle Address of the trusted oracle
      */
     function initialize(address _trustedOracle) public initializer {
         // Initialize the parent USDCToken contract
-        super._initializeToken(); // Contract owns the initial supply
+        _initializeToken(); // Contract owns the initial supply
 
         // Set MoneyPot specific parameters
         trustedOracle = _trustedOracle;

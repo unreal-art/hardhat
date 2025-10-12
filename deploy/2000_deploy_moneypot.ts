@@ -5,11 +5,15 @@ import { MoneyPot } from "../typechain-types"
 import { ethers } from "hardhat"
 
 const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  console.log("🚀 Starting MoneyPot deployment script...")
+  console.log("Network:", hre.network.name)
+  
   const { deployments, getNamedAccounts } = hre
   const { deploy, execute } = deployments
   const { admin,  moneypot_oracle } = await getNamedAccounts()
 
   console.log("SET moneypot_oracle: ", moneypot_oracle)
+  console.log("Admin address: ", admin)
 
   const signer = await hre.ethers.getSigner(admin)
   let nonce = await signer.getNonce("pending")
@@ -26,6 +30,7 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   // Check if MoneyPot is already deployed
   const existingDeployment = await hre.deployments.getOrNull("MoneyPot")
+  console.log("Existing deployment check:", existingDeployment ? "EXISTS" : "NOT FOUND")
 
   if (!existingDeployment) {
     console.log("Deploying MoneyPot Contract....💰🎯")
@@ -47,16 +52,6 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       },
       log: true,
     })
-
-    await execute(
-      "MoneyPot",
-      {
-        from: admin,
-        log: true,
-      },
-      "initialize",
-      moneypot_oracle
-    )
 
     // Connect to the deployed contract
     moneyPot = await connectMoneyPot()
