@@ -61,10 +61,8 @@ async function main() {
     throw error;
   }
   
-  // Get admin signer for contract interactions
+  // Get signers for contract interactions (only for provider-unlocked accounts)
   const adminSigner = await ethers.getSigner(admin.address);
-  const creatorSigner = await ethers.getSigner(creatorWallet.address);
-  const hunterSigner = await ethers.getSigner(hunterWallet.address);
   const oracleSigner = await ethers.getSigner(moneypot_oracle.address);
   
   // Check who the owner is
