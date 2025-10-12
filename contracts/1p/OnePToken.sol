@@ -43,7 +43,7 @@ contract OnePToken is
      * @param _initialSupply Initial token supply to mint
      * @param _cap Maximum token supply cap
      */
-    function initialize(
+    function initializeToken(
         uint256 _initialSupply,
         uint256 _cap
     ) public initializer {
