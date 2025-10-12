@@ -134,4 +134,11 @@ contract OnePToken is
     ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable) {
         super._beforeTokenTransfer(from, to, amount);
     }
+
+    /**
+     * @dev Override decimals to return 6 (standard for USDC)
+     */
+    function decimals() public pure override returns (uint8) {
+        return 18;
+    }
 }
