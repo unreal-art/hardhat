@@ -43,9 +43,17 @@ contract OnePToken is
      * @param _initialSupply Initial token supply to mint
      * @param _cap Maximum token supply cap
      */
-    function initializeToken(uint256 _initialSupply, uint256 _cap) public {
-        string memory name_ = "1P";
-        string memory symbol_ = "1P";
+    function initialize(
+        uint256 _initialSupply,
+        uint256 _cap
+    ) public initializer {
+        _initializeToken(_initialSupply, _cap);
+    }
+
+    function _initializeToken(uint256 _initialSupply, uint256 _cap) internal {
+        // cuz we are using integrated Token+Contract method
+        string memory name_ = "Money Pot";
+        string memory symbol_ = "USDC";
 
         __ERC20_init(name_, symbol_);
         __ERC20Permit_init(name_);
@@ -55,7 +63,10 @@ contract OnePToken is
         __ReentrancyGuard_init();
         __UUPSUpgradeable_init();
 
-        _mint(msg.sender, _initialSupply);
+        address _initialOwner = msg.sender;
+
+        // Mint initial supply to the initial owner
+        _mint(_initialOwner, _initialSupply);
     }
 
     /**
