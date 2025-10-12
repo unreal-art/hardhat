@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/utils/math/Math.sol";
+
 /**
  * @title OnePProtocol
  * @dev Library containing all 1P Protocol logic and data structures
@@ -12,9 +14,10 @@ pragma solidity ^0.8.20;
  */
 library OnePProtocol {
     // ============ CONSTANTS ============
-
-    uint64 constant MAX_ROUNDS = 10;
+    uint64 constant MIN_ROUNDS = 2;
+    uint64 constant MAX_ROUNDS = 11;
     uint256 constant REGISTRATION_FEE = 100 ether; // 100 $1P tokens for registration
+    uint256 constant SCALE = 10000; // Fixed-point scaling factor for precision
 
     uint64 constant ATTEMPT_EXPIRY_DURATION = 600; // 10 minutes
 
@@ -137,28 +140,98 @@ library OnePProtocol {
     // ============ DIFFICULTY CALCULATION ============
 
     /**
-     * @dev Calculate new difficulty based on attempt result
-     * @param currentDifficulty Current difficulty level
+     * @dev Calculate difficulty using bonding curve based on user's success/failure ratio
+     * @param totalAttempts Total number of attempts made
+     * @param successCount Number of successful attempts
+     * @param isHighAbuse Whether user is in high abuse mode
+     * @return difficulty Calculated difficulty level
+     */
+    function calculateDifficultyBondingCurve(
+        uint64 totalAttempts,
+        uint64 successCount,
+        uint64 /* failureCount */,
+        bool isHighAbuse
+    ) internal pure returns (uint64 difficulty) {
+        if (totalAttempts == 0) {
+            return MIN_ROUNDS;
+        }
+
+        // Calculate success rate (0 to 1, scaled to SCALE for precision)
+        uint256 successRate = (uint256(successCount) * SCALE) /
+            uint256(totalAttempts);
+
+        // Base difficulty calculation using inverse relationship with success rate
+        // Higher success rate = lower difficulty, but with exponential scaling
+        // Formula: MIN_ROUNDS + (MAX_ROUNDS - MIN_ROUNDS) * ((SCALE - successRate) / SCALE)^2.5
+        // Using integer-safe computation: x^2.5 = x^2 * sqrt(x) with fixed-point scaling
+
+        uint256 inverseSuccessRate = SCALE - successRate;
+
+        // Compute x^2 with scaling: sq = (inverseSuccessRate * inverseSuccessRate) / SCALE
+        uint256 sq = (inverseSuccessRate * inverseSuccessRate) / SCALE;
+
+        // Compute sqrt(x) with scaling: root = sqrt(inverseSuccessRate * SCALE) / sqrt(SCALE)
+        // This gives us sqrt(x) scaled by sqrt(SCALE)
+        uint256 scaledValue = inverseSuccessRate * SCALE;
+        uint256 root = Math.sqrt(scaledValue);
+
+        // Compute x^2.5 = (sq * root) / SCALE to maintain consistent scaling
+        uint256 curveExponent = (sq * root) / SCALE;
+
+        uint256 difficultyRange = MAX_ROUNDS - MIN_ROUNDS;
+        uint256 calculatedDifficulty = MIN_ROUNDS +
+            (difficultyRange * curveExponent) /
+            SCALE;
+
+        // Apply high abuse multiplier (exponential penalty)
+        if (isHighAbuse) {
+            // High abuse mode: multiply by 2 and cap at MAX_ROUNDS
+            calculatedDifficulty = calculatedDifficulty * 2;
+            if (calculatedDifficulty > MAX_ROUNDS) {
+                return MAX_ROUNDS;
+            }
+        }
+
+        // Ensure we stay within bounds
+        if (calculatedDifficulty < MIN_ROUNDS) {
+            return MIN_ROUNDS;
+        } else if (calculatedDifficulty > MAX_ROUNDS) {
+            return MAX_ROUNDS;
+        } else {
+            return uint64(calculatedDifficulty);
+        }
+    }
+
+    /**
+     * @dev Calculate new difficulty based on attempt result using bonding curve
+     * @param totalAttempts Total number of attempts made
+     * @param successCount Number of successful attempts
+     * @param failureCount Number of failed attempts
      * @param isHighAbuse Whether user is in high abuse mode
      * @param isSuccess Whether attempt was successful
      * @return newDifficulty New difficulty level
      */
     function calculateNewDifficulty(
-        uint64 currentDifficulty,
+        uint64 /* currentDifficulty */,
+        uint64 totalAttempts,
+        uint64 successCount,
+        uint64 failureCount,
         bool isHighAbuse,
         bool isSuccess
     ) internal pure returns (uint64 newDifficulty) {
-        if (isSuccess) {
-            // On success, maintain or slightly reduce difficulty
-            return currentDifficulty > 1 ? currentDifficulty - 1 : 1;
-        } else {
-            // On failure, increase difficulty
-            if (isHighAbuse) {
-                return min(MAX_ROUNDS, currentDifficulty * 2);
-            } else {
-                return min(MAX_ROUNDS, currentDifficulty + 1);
-            }
-        }
+        // Update counts for the current attempt
+        uint64 newTotalAttempts = totalAttempts + 1;
+        uint64 newSuccessCount = isSuccess ? successCount + 1 : successCount;
+        uint64 newFailureCount = isSuccess ? failureCount : failureCount + 1;
+
+        // Calculate new difficulty using bonding curve
+        return
+            calculateDifficultyBondingCurve(
+                newTotalAttempts,
+                newSuccessCount,
+                newFailureCount,
+                isHighAbuse
+            );
     }
 
     /**
@@ -253,7 +326,7 @@ library OnePProtocol {
                 failureCount: 0,
                 firstFailureTs: 0,
                 lastFailureTs: 0,
-                d: 1, // Start with difficulty 1
+                d: MIN_ROUNDS, // Start with minimum difficulty
                 highAbuse: false
             });
     }
@@ -268,13 +341,10 @@ library OnePProtocol {
         UserState memory state,
         bool isSuccess
     ) internal view returns (UserState memory updatedState) {
-        state.totalAttempts++;
         uint64 nowTs = uint64(block.timestamp);
 
         if (isSuccess) {
             state.successCount++;
-            // Reduce difficulty on success
-            state.d = state.d > 1 ? state.d - 1 : 1;
         } else {
             state.failureCount++;
             if (state.firstFailureTs == 0) {
@@ -292,10 +362,16 @@ library OnePProtocol {
             ) {
                 state.highAbuse = true;
             }
-
-            // Increase difficulty
-            state.d = calculateNewDifficulty(state.d, state.highAbuse, false);
         }
+
+        state.totalAttempts++;
+        // Always update difficulty using bonding curve based on current state
+        state.d = calculateDifficultyBondingCurve(
+            state.totalAttempts,
+            state.successCount,
+            state.failureCount,
+            state.highAbuse
+        );
 
         return state;
     }
@@ -303,27 +379,41 @@ library OnePProtocol {
     // ============ FEE CALCULATION ============
 
     /**
-     * @dev Calculate dynamic attempt fee based on bonding curve
-     * @param baseFee Base fee for attempts
-     * @param feeMultiplier Multiplier for bonding curve
-     * @param totalSupply Current total token supply
-     * @param maxCost Maximum cost per attempt
-     * @param minCost Minimum cost per attempt
+     * @dev Calculate attempt fee using Polymarket-style bonding curve
+     * @param state User state containing success/failure counts
      * @return fee Calculated attempt fee
      */
-    function calculateAttemptFee(
-        uint256 baseFee,
-        uint256 feeMultiplier,
-        uint256 totalSupply,
-        uint256 maxCost,
-        uint256 minCost
+    function calcAttemptFee(
+        UserState memory state
     ) internal pure returns (uint256 fee) {
-        uint256 calculatedFee = baseFee + (totalSupply / 1e18) * feeMultiplier;
+        uint64 successCount = state.successCount;
+        uint64 failureCount = state.failureCount;
 
-        if (calculatedFee > maxCost) {
-            return maxCost;
-        } else if (calculatedFee < minCost) {
-            return minCost;
+        // If no attempts yet, use minimum fee
+        if (successCount == 0 && failureCount == 0) {
+            return MIN_ATTEMPT_FEE;
+        }
+
+        // Polymarket-style bonding curve: failureCount^2 / (failureCount^2 + successCount)
+        // This creates higher fees for users with more failures
+        // Square the failure count for the bonding curve calculation
+        uint256 failureCountSquared = failureCount * failureCount;
+        uint256 denominator = failureCountSquared + uint256(successCount);
+
+        // Calculate fee ratio (0 to 1, scaled to 10000 for precision)
+        uint256 feeRatio = (failureCountSquared * 10000) / denominator;
+
+        // Apply fee range: MIN_ATTEMPT_FEE to MAX_ATTEMPT_FEE
+        uint256 feeRange = MAX_ATTEMPT_FEE - MIN_ATTEMPT_FEE;
+
+        // Calculate fee: minFee + (feeRange * feeRatio / 10000)
+        uint256 calculatedFee = MIN_ATTEMPT_FEE + (feeRange * feeRatio) / 10000;
+
+        // Ensure we stay within bounds
+        if (calculatedFee > MAX_ATTEMPT_FEE) {
+            return MAX_ATTEMPT_FEE;
+        } else if (calculatedFee < MIN_ATTEMPT_FEE) {
+            return MIN_ATTEMPT_FEE;
         } else {
             return calculatedFee;
         }
