@@ -103,7 +103,7 @@ contract MoneyPot is USDCToken {
      */
     function initialize(address _trustedOracle) public initializer {
         // Initialize the parent USDCToken contract
-        super.initializeToken(); // Contract owns the initial supply
+        super._initialize(); // Contract owns the initial supply
 
         // Set MoneyPot specific parameters
         trustedOracle = _trustedOracle;
