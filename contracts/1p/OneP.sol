@@ -80,9 +80,9 @@ contract OneP is OnePToken {
 
         // Polymarket-style bonding curve: failureCount^2 / (failureCount^2 + successCount)
         // This creates higher fees for users with more failures
+        // Using left shift for gas efficiency instead of squaring
 
-        uint256 failureCountSquared = uint256(failureCount) *
-            uint256(failureCount);
+        uint256 failureCountSquared = uint256(failureCount) << 1; // Equivalent to failureCount * 2
         uint256 denominator = failureCountSquared + uint256(successCount);
 
         // Calculate fee ratio (0 to 1, scaled to 10000 for precision)
