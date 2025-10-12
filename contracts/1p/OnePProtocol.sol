@@ -396,8 +396,7 @@ library OnePProtocol {
 
         // Polymarket-style bonding curve: failureCount^2 / (failureCount^2 + successCount)
         // This creates higher fees for users with more failures
-        // Using left shift for gas efficiency instead of squaring
-
+        // Square the failure count for the bonding curve calculation
         uint256 failureCountSquared = failureCount * failureCount; // Equivalent to failureCount * 2
         uint256 denominator = failureCountSquared + uint256(successCount);
 
