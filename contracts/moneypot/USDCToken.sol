@@ -48,10 +48,10 @@ contract USDCToken is
      * @dev Initialize the USDCToken contract
      */
     function initialize() external initializer {
-        _initialize();
+        _initializeToken();
     }
 
-    function _initialize() internal {
+    function _initializeToken() internal {
         // cuz we are using integrated Token+Contract method
         string memory name_ = "Money Pot";
         string memory symbol_ = "USDC";
