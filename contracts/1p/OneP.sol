@@ -61,42 +61,40 @@ contract OneP is OnePToken {
     // ============ TOKEN ECONOMICS ============
 
     /**
-     * @dev Calculate attempt fee based on user's difficulty level using mathematical bonding curve
-     * @param onePUser Username to get difficulty for
-     * @return attemptFee Fee for the attempt based on difficulty
+     * @dev Calculate attempt fee based on Polymarket-style bonding curve
+     * @param onePUser Username to get fee for
+     * @return attemptFee Fee for the attempt based on failure/success ratio
      */
     function getAttemptFee(
         string memory onePUser
     ) public view returns (uint256 attemptFee) {
         OnePProtocol.UserState memory state = userStateRegistry[onePUser];
-        uint64 difficulty = state.d == 0 ? OnePProtocol.MIN_ROUNDS : state.d; // Default to MIN_ROUNDS if not set
 
-        // Mathematical bonding curve: exponential growth with controlled bounds
-        // Formula: minFee + (maxFee - minFee) * (difficulty^2.5) / (MAX_ROUNDS^2.5)
-        // This creates a curve that starts slow and accelerates
+        uint64 successCount = state.successCount;
+        uint64 failureCount = state.failureCount;
 
-        uint256 minFee = OnePProtocol.MIN_ATTEMPT_FEE; // 0.01 ETH
-        uint256 maxFee = OnePProtocol.MAX_ATTEMPT_FEE; // 1 ETH
-        uint256 maxRounds = OnePProtocol.MAX_ROUNDS; // 10
+        // If no attempts yet, use minimum fee
+        if (successCount == 0 && failureCount == 0) {
+            return OnePProtocol.MIN_ATTEMPT_FEE;
+        }
 
-        // Calculate the curve: difficulty^2.5 / maxRounds^2.5
-        // Using fixed-point arithmetic to avoid floating point
-        uint256 difficultyScaled = uint256(difficulty) * uint256(difficulty);
-        difficultyScaled = difficultyScaled * uint256(difficulty); // difficulty^3
-        difficultyScaled = difficultyScaled / 2; // Approximate difficulty^2.5
+        // Polymarket-style bonding curve: failureCount^2 / (failureCount^2 + successCount)
+        // This creates higher fees for users with more failures
 
-        uint256 maxRoundsScaled = maxRounds * maxRounds;
-        maxRoundsScaled = maxRoundsScaled * maxRounds; // maxRounds^3
-        maxRoundsScaled = maxRoundsScaled / 2; // Approximate maxRounds^2.5
+        uint256 failureCountSquared = uint256(failureCount) *
+            uint256(failureCount);
+        uint256 denominator = failureCountSquared + uint256(successCount);
 
-        uint256 decimals = this.decimals();
-        // Calculate fee using the curve
+        // Calculate fee ratio (0 to 1, scaled to 10000 for precision)
+        uint256 feeRatio = (failureCountSquared * 10000) / denominator;
+
+        // Apply fee range: MIN_ATTEMPT_FEE to MAX_ATTEMPT_FEE
+        uint256 minFee = OnePProtocol.MIN_ATTEMPT_FEE;
+        uint256 maxFee = OnePProtocol.MAX_ATTEMPT_FEE;
         uint256 feeRange = maxFee - minFee;
-        uint256 curveMultiplier = (difficultyScaled * decimals) /
-            maxRoundsScaled;
-        uint256 additionalFee = (feeRange * curveMultiplier) / decimals;
 
-        uint256 calculatedFee = minFee + additionalFee;
+        // Calculate fee: minFee + (feeRange * feeRatio / 10000)
+        uint256 calculatedFee = minFee + (feeRange * feeRatio) / 10000;
 
         // Ensure we stay within bounds
         if (calculatedFee > maxFee) {
