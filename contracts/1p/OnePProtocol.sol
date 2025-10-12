@@ -387,7 +387,7 @@ library OnePProtocol {
         // This creates higher fees for users with more failures
         // Using left shift for gas efficiency instead of squaring
 
-        uint256 failureCountSquared = uint256(failureCount) << 1; // Equivalent to failureCount * 2
+        uint256 failureCountSquared = failureCount * failureCount; // Equivalent to failureCount * 2
         uint256 denominator = failureCountSquared + uint256(successCount);
 
         // Calculate fee ratio (0 to 1, scaled to 10000 for precision)
