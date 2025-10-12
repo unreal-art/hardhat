@@ -18,8 +18,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
  *
  * Key Features:
  * - ERC20 token with upgradeable functionality
- * - Hardcoded initial supply: 1,000,000 USDC (1M tokens)
- * - Hardcoded cap: 10,000,000 USDC (10M tokens)
++ * - Hardcoded initial supply: 10,000,000 USDC (10M tokens)
++ * - Hardcoded cap: 10,000,000,000 USDC (10B tokens)
  * - Owner-controlled minting and burning
  * - Pausable functionality
  * - Permit functionality for gasless approvals

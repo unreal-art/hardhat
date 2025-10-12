@@ -2,8 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "./USDCToken.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 
 /**
  * @title MoneyPot
@@ -16,7 +15,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
  * - Maintains separation of concerns: token logic in parent, game logic here
  */
 contract MoneyPot is USDCToken {
-    using SafeERC20 for USDCToken;
+    using SafeERC20Upgradeable for USDCToken;
 
     // Constants
     uint256 public constant DIFFICULTY_MOD = 3;
