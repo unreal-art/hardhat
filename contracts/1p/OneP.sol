@@ -189,17 +189,20 @@ contract OneP is OnePToken {
     ) external onlyVerifier {
         OnePProtocol.Attempt storage att = attemptRegistry[attemptId];
 
-        // Validate status transition is progressive
-        require(
-            OnePProtocol.isStatusProgressive(att.status, newStatus),
-            "Status must be progressive"
-        );
-
-        // Validate specific status transitions
-        require(
-            OnePProtocol.validateStatusTransition(att.status, newStatus),
-            "Invalid status transition"
-        );
+        if (att.status == OnePProtocol.Status.Pending) {
+            require(
+                newStatus == OnePProtocol.Status.InProgress,
+                "Status must be in progress"
+            );
+        } else if (att.status == OnePProtocol.Status.InProgress) {
+            require(
+                newStatus == OnePProtocol.Status.Success ||
+                    newStatus == OnePProtocol.Status.Failed,
+                "Status must be success or failed"
+            );
+        } else {
+            revert("Attempt used up");
+        }
 
         require(!OnePProtocol.isAttemptExpired(att), "Attempt expired");
 
