@@ -122,6 +122,17 @@ const config: _Config = {
       odp: "0xc1c3ed9a297da8dc89f9f56c42a8549203df5262",
       confirmations: 1,
     },
+    torusV2: {
+      url: "https://rpc-v2.testnet.toruschain.com/",
+      ws: "wss://rpc-v2.testnet.toruschain.com/",
+      explorer: "https://v2.testnet.toruscan.com",
+      chainId: 8196,
+      accounts: PRIVATE_KEYS,
+      saveDeployments: true,
+      faucet: "",
+      odp: "0x51Bb4e2E3D81cd17A713f1bD3B23d3fF62712b40",
+      confirmations: 1,
+    },
     torusM: {
       url: "https://rpc.toruschain.com",
       ws: "wss://rpc.toruschain.com",
