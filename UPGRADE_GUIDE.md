@@ -1,172 +1,123 @@
-# OneP Contract Upgrade Guide
+# OneP Contract Upgrade Script - All-in-One
 
-This guide explains how to upgrade the OneP contract using the provided upgrade scripts.
+## 🎯 Overview
 
-## 📋 Overview
-
-The OneP contract uses OpenZeppelin's transparent proxy pattern, allowing for upgrades while preserving all contract state. The upgrade system includes:
-
-- **Standard Upgrade**: Preserves all state and functionality
-- **Advanced Upgrade**: Multiple strategies for different scenarios
-- **Compatibility Checks**: Verify upgrade readiness
-- **Rollback Capability**: Emergency rollback if needed
+This single script handles all OneP contract upgrade needs with sensible defaults. No complex configuration needed!
 
 ## 🚀 Quick Start
 
-### 1. Check Upgrade Compatibility
-
-Before upgrading, always check if the contract is ready for upgrade:
+### Basic Usage (Recommended)
 
 ```bash
-# Check compatibility on cc network
+# Check contract status
 CHECK_ONLY=true npx hardhat run scripts/upgrade-onep.ts --network cc
 
-# Check compatibility on etherlink network
-CHECK_ONLY=true npx hardhat run scripts/upgrade-onep.ts --network etherlink
-```
+# Dry run upgrade (test without executing)
+DRY_RUN=true npx hardhat run scripts/upgrade-onep.ts --network cc
 
-### 2. Perform Standard Upgrade
-
-```bash
-# Upgrade OneP contract on cc network
+# Perform actual upgrade
 npx hardhat run scripts/upgrade-onep.ts --network cc
-
-# Upgrade OneP contract on etherlink network
-npx hardhat run scripts/upgrade-onep.ts --network etherlink
 ```
 
-### 3. Advanced Upgrade Options
+### Advanced Usage
 
 ```bash
-# Standard upgrade (preserves all state)
-DRY_RUN=true UPGRADE_STRATEGY=standard npx hardhat run scripts/upgrade-onep-advanced.ts --network cc
-
 # Upgrade with reinitialization
-DRY_RUN=true UPGRADE_STRATEGY=init npx hardhat run scripts/upgrade-onep-advanced.ts --network cc
+STRATEGY=init npx hardhat run scripts/upgrade-onep.ts --network cc
 
 # Emergency upgrade
-DRY_RUN=true UPGRADE_STRATEGY=emergency npx hardhat run scripts/upgrade-onep-advanced.ts --network cc
+STRATEGY=emergency npx hardhat run scripts/upgrade-onep.ts --network cc
+
+# Custom proxy address
+PROXY_ADDRESS=0x1234... ADMIN_ADDRESS=0x5678... npx hardhat run scripts/upgrade-onep.ts --network cc
 ```
 
-## 📊 Current Deployments
+## 📊 Known Deployments (Auto-detected)
 
-| Network   | OneP Address                                 | Implementation                               | Status    |
-| --------- | -------------------------------------------- | -------------------------------------------- | --------- |
-| cc        | `0x15868E3227F91E7457689022DeFd364037F4293C` | `0x9838B6aFBC0768d1e4B574677E28E01d4C7f5F94` | ✅ Active |
-| etherlink | `0x74490cf620C2CEe6633082dC8F8D07C42FEe6aD3` | `0x99900EE81f6F94DA41721CBba8a2FBde9C95B4b6` | ✅ Active |
+| Network   | Proxy Address                                | Auto-detected |
+| --------- | -------------------------------------------- | ------------- |
+| cc        | `0x15868E3227F91E7457689022DeFd364037F4293C` | ✅ Yes        |
+| etherlink | `0x74490cf620C2CEe6633082dC8F8D07C42FEe6aD3` | ✅ Yes        |
 
-## 🔧 Upgrade Strategies
+## 🔧 Environment Variables (All Optional)
 
-### Standard Upgrade
+| Variable        | Description                        | Default                  |
+| --------------- | ---------------------------------- | ------------------------ |
+| `PROXY_ADDRESS` | Proxy contract address             | Auto-detected by network |
+| `ADMIN_ADDRESS` | Admin address                      | First account            |
+| `DRY_RUN`       | Simulate upgrade without executing | `false`                  |
+| `STRATEGY`      | Upgrade strategy                   | `standard`               |
+| `CHECK_ONLY`    | Only check contract status         | `false`                  |
 
-- **Purpose**: Regular contract upgrades with new features or bug fixes
+## 🎯 Upgrade Strategies
+
+### Standard (Default)
+
+- **Purpose**: Regular upgrades with new features or bug fixes
 - **State**: All existing state is preserved
 - **Safety**: High - no data loss
 - **Usage**: Most common upgrade scenario
 
-### Upgrade with Initialization
+### Init
 
 - **Purpose**: When new state variables need initialization
 - **State**: Preserves existing state, initializes new variables
 - **Safety**: Medium - requires careful handling
 - **Usage**: When adding new functionality that needs setup
 
-### Emergency Upgrade
+### Emergency
 
 - **Purpose**: Critical bug fixes or security patches
 - **State**: Preserves existing state
 - **Safety**: High - designed for urgent situations
 - **Usage**: Security vulnerabilities or critical bugs
 
-### Rollback
-
-- **Purpose**: Revert to previous implementation
-- **State**: Preserves existing state
-- **Safety**: High - but requires previous implementation address
-- **Usage**: When new implementation has issues
-
-## 🛠️ Scripts Available
-
-### 1. `scripts/upgrade-onep.ts`
-
-Basic upgrade script with standard functionality:
-
-- Standard upgrade
-- Compatibility check
-- Hardhat-deploy integration
-
-### 2. `scripts/upgrade-onep-advanced.ts`
-
-Advanced upgrade script with multiple strategies:
-
-- Standard upgrade
-- Upgrade with initialization
-- Emergency upgrade
-- Rollback capability
-- Dry run support
-
-### 3. `deploy/1000_deploy_1p.ts`
-
-Updated deployment script that:
-
-- Checks for upgrade needs
-- Provides upgrade guidance
-- Maintains contract state
-
-## 🔍 Environment Variables
-
-| Variable             | Description                        | Example                     |
-| -------------------- | ---------------------------------- | --------------------------- |
-| `CHECK_ONLY`         | Only perform compatibility check   | `CHECK_ONLY=true`           |
-| `DRY_RUN`            | Simulate upgrade without executing | `DRY_RUN=true`              |
-| `UPGRADE_STRATEGY`   | Choose upgrade strategy            | `UPGRADE_STRATEGY=standard` |
-| `USE_HARDHAT_DEPLOY` | Use hardhat-deploy upgrade method  | `USE_HARDHAT_DEPLOY=true`   |
-
-## 📝 Usage Examples
+## 🚀 Usage Examples
 
 ### Check Contract Status
 
 ```bash
-# Check all networks
 CHECK_ONLY=true npx hardhat run scripts/upgrade-onep.ts --network cc
-CHECK_ONLY=true npx hardhat run scripts/upgrade-onep.ts --network etherlink
 ```
 
-### Dry Run Upgrade
+### Test Upgrade (Dry Run)
 
 ```bash
-# Test upgrade without executing
-DRY_RUN=true npx hardhat run scripts/upgrade-onep-advanced.ts --network cc
+DRY_RUN=true npx hardhat run scripts/upgrade-onep.ts --network cc
 ```
 
-### Perform Actual Upgrade
+### Standard Upgrade
 
 ```bash
-# Execute upgrade
 npx hardhat run scripts/upgrade-onep.ts --network cc
 ```
 
-### Advanced Upgrade Scenarios
+### Upgrade with Initialization
 
 ```bash
-# Standard upgrade
-UPGRADE_STRATEGY=standard npx hardhat run scripts/upgrade-onep-advanced.ts --network cc
+STRATEGY=init npx hardhat run scripts/upgrade-onep.ts --network cc
+```
 
-# Upgrade with initialization
-UPGRADE_STRATEGY=init npx hardhat run scripts/upgrade-onep-advanced.ts --network cc
+### Emergency Upgrade
 
-# Emergency upgrade
-UPGRADE_STRATEGY=emergency npx hardhat run scripts/upgrade-onep-advanced.ts --network cc
+```bash
+STRATEGY=emergency npx hardhat run scripts/upgrade-onep.ts --network cc
+```
+
+### Custom Configuration
+
+```bash
+PROXY_ADDRESS=0x1234... ADMIN_ADDRESS=0x5678... STRATEGY=init DRY_RUN=true npx hardhat run scripts/upgrade-onep.ts --network cc
 ```
 
 ## ⚠️ Important Notes
 
 ### Before Upgrading
 
-1. **Always run compatibility check first**
-2. **Test on testnet before mainnet**
-3. **Ensure you have admin privileges**
-4. **Backup current implementation address**
+1. **Always run dry run first**: `DRY_RUN=true npx hardhat run scripts/upgrade-onep.ts --network <network>`
+2. **Check contract status**: `CHECK_ONLY=true npx hardhat run scripts/upgrade-onep.ts --network <network>`
+3. **Test on testnet before mainnet**
+4. **Ensure you have admin privileges**
 
 ### During Upgrade
 
@@ -193,17 +144,17 @@ UPGRADE_STRATEGY=emergency npx hardhat run scripts/upgrade-onep-advanced.ts --ne
 
 ### Common Issues
 
-1. **"No deployment found"**
-   - Solution: Ensure contract is deployed on the target network
+1. **"No proxy address found"**
+   - Solution: Use a supported network (cc, etherlink) or set PROXY_ADDRESS
 
-2. **"Already initialized"**
-   - Solution: Use standard upgrade instead of init strategy
+2. **"Contract may not be upgradeable"**
+   - Solution: Verify proxy configuration
 
 3. **"Upgrade failed"**
    - Solution: Check admin permissions and network connectivity
 
-4. **"Contract not upgradeable"**
-   - Solution: Verify proxy configuration
+4. **"Already initialized"**
+   - Solution: Use standard strategy instead of init
 
 ### Getting Help
 

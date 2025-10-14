@@ -2,95 +2,164 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { ethers } from "hardhat";
 
 /**
- * OneP Contract Upgrade Script
+ * OneP Contract Upgrade Script - All-in-One
  * 
- * This script upgrades the OneP contract to a new implementation while preserving all state.
- * It uses OpenZeppelin's transparent proxy pattern for upgrades.
+ * This single script handles all OneP contract upgrade needs with sensible defaults.
  * 
  * Usage:
- * npx hardhat run scripts/upgrade-onep.ts --network <network_name>
+ * npx hardhat run scripts/upgrade-onep.ts --network <network>
  * 
- * Example:
- * npx hardhat run scripts/upgrade-onep.ts --network base
+ * Environment Variables (all optional):
+ * - PROXY_ADDRESS: Proxy contract address (defaults to known deployments)
+ * - ADMIN_ADDRESS: Admin address (defaults to first account)
+ * - DRY_RUN: true/false (default: false)
+ * - STRATEGY: standard/init/emergency (default: standard)
+ * - CHECK_ONLY: true/false (default: false)
  */
+
+// Known deployments for easy reference
+const KNOWN_DEPLOYMENTS = {
+  "cc": "0x15868E3227F91E7457689022DeFd364037F4293C",
+  "etherlink": "0x74490cf620C2CEe6633082dC8F8D07C42FEe6aD3"
+};
+
 async function main(hre: HardhatRuntimeEnvironment) {
-  // Check if this is a compatibility check
+  console.log("🔄 OneP Contract Upgrade Script - All-in-One\n");
+
+  // Get parameters with sensible defaults
+  const network = hre.network.name;
+  const proxyAddress = process.env.PROXY_ADDRESS || KNOWN_DEPLOYMENTS[network as keyof typeof KNOWN_DEPLOYMENTS];
+  const dryRun = process.env.DRY_RUN === "true";
+  const strategy = process.env.STRATEGY || "standard";
   const checkOnly = process.env.CHECK_ONLY === "true";
-  
-  if (checkOnly) {
-    await checkUpgradeCompatibility(hre);
+
+  // Get admin address - use first account if not provided
+  let adminAddress = process.env.ADMIN_ADDRESS;
+  if (!adminAddress) {
+    const accounts = await hre.ethers.getSigners();
+    adminAddress = await accounts[0].getAddress();
+    console.log(`ℹ️  Using first account as admin: ${adminAddress}`);
+  }
+
+  // Show configuration
+  console.log(`📍 Proxy: ${proxyAddress}`);
+  console.log(`👤 Admin: ${adminAddress}`);
+  console.log(`🎯 Strategy: ${strategy}`);
+  console.log(`🌐 Network: ${network}`);
+  console.log(`🔍 Dry Run: ${dryRun}`);
+  console.log(`🔍 Check Only: ${checkOnly}`);
+
+  // Validate inputs
+  if (!proxyAddress) {
+    console.log("\n❌ No proxy address found!");
+    console.log("💡 Available networks with known deployments:");
+    for (const [net, addr] of Object.entries(KNOWN_DEPLOYMENTS)) {
+      console.log(`   ${net}: ${addr}`);
+    }
+    console.log("\n💡 Or set PROXY_ADDRESS environment variable");
     return;
   }
 
-  console.log("🔄 Starting OneP contract upgrade process...\n");
-
-  const { deployments, getNamedAccounts } = hre;
-  const { deploy, get } = deployments;
-  const { admin } = await getNamedAccounts();
-
-  console.log(`👤 Admin account: ${admin}`);
-  console.log(`🌐 Network: ${hre.network.name}`);
-
   try {
-    // Get the current proxy deployment
-    const currentDeployment = await get("OneP");
-    console.log(`📍 Current OneP proxy address: ${currentDeployment.address}`);
-
-    // Get the current implementation
-    const currentImplDeployment = await get("OneP_Implementation");
-    console.log(`📍 Current implementation address: ${currentImplDeployment.address}`);
-
-    // Deploy new implementation
-    console.log("\n🚀 Deploying new OneP implementation...");
+    const adminSigner = await hre.ethers.getSigner(adminAddress);
+    const proxy = await hre.ethers.getContractAt("OneP", proxyAddress);
     
-    const newImplDeployment = await deploy("OneP_Implementation", {
-      from: admin,
-      contract: "OneP",
-      log: true,
-    });
+    const currentImpl = await proxy.implementation();
+    console.log(`📍 Current Implementation: ${currentImpl}`);
 
-    console.log(`✅ New implementation deployed at: ${newImplDeployment.address}`);
-
-    // Get the proxy contract instance
-    const proxyAdmin = await ethers.getContractAt("DefaultProxyAdmin", currentDeployment.address);
-    const proxy = await ethers.getContractAt("OneP", currentDeployment.address);
-
-    console.log("\n🔧 Upgrading proxy to new implementation...");
-
-    // Upgrade the proxy to point to the new implementation
-    const upgradeTx = await proxyAdmin.upgrade(currentDeployment.address, newImplDeployment.address);
-    await upgradeTx.wait();
-
-    console.log(`✅ Proxy upgraded successfully!`);
-    console.log(`📍 New implementation address: ${newImplDeployment.address}`);
-
-    // Verify the upgrade worked by calling a function on the proxy
-    console.log("\n🧪 Verifying upgrade...");
-    
+    // Check contract status
+    console.log("\n🔍 Checking contract status...");
     const verifier = await proxy.verifier();
     const totalSupply = await proxy.totalSupply();
     const maxSupply = await proxy.cap();
 
-    console.log(`✅ Verification successful!`);
+    console.log(`✅ Contract Status:`);
     console.log(`   Verifier: ${verifier}`);
     console.log(`   Total Supply: ${ethers.formatEther(totalSupply)} 1P`);
     console.log(`   Max Supply: ${ethers.formatEther(maxSupply)} 1P`);
 
-    // Optional: Initialize any new functionality if needed
-    console.log("\n🔍 Checking if new initialization is needed...");
+    // If check only, stop here
+    if (checkOnly) {
+      console.log("✅ Status check completed!");
+      return;
+    }
+
+    // Check if contract is upgradeable
+    try {
+      await proxy.upgradeTo.staticCall(currentImpl);
+      console.log("✅ Contract is upgradeable");
+    } catch (error) {
+      console.log("❌ Contract may not be upgradeable");
+    }
+
+    if (dryRun) {
+      console.log("\n🔍 [DRY RUN] Would perform upgrade:");
+      console.log(`   Strategy: ${strategy}`);
+      console.log(`   Deploy new implementation`);
+      console.log(`   Upgrade proxy to new implementation`);
+      if (strategy === "init") {
+        console.log(`   Reinitialize contract`);
+      }
+      return;
+    }
+
+    // Perform upgrade
+    console.log(`\n🚀 Performing ${strategy} upgrade...`);
+
+    // Deploy new implementation
+    console.log("📦 Deploying new implementation...");
+    const OnePFactory = await hre.ethers.getContractFactory("OneP");
+    const newImpl = await OnePFactory.deploy();
+    await newImpl.waitForDeployment();
     
-    // You can add any new initialization logic here
-    // For example, if you added new state variables or functions
-    
-    console.log("✅ Upgrade completed successfully!");
+    const newImplAddress = await newImpl.getAddress();
+    console.log(`✅ New implementation: ${newImplAddress}`);
+
+    // Upgrade proxy
+    console.log("🔧 Upgrading proxy...");
+    const upgradeTx = await proxy.upgradeTo(newImplAddress);
+    await upgradeTx.wait();
+
+    // Handle strategy-specific logic
+    if (strategy === "init") {
+      console.log("🔧 Reinitializing contract...");
+      try {
+        const reinitTx = await proxy.initialize(verifier);
+        await reinitTx.wait();
+        console.log("✅ Reinitialization completed!");
+      } catch (reinitError: any) {
+        if (reinitError.message.includes("already initialized")) {
+          console.log("ℹ️  Contract already initialized, skipping reinitialization");
+        } else {
+          throw reinitError;
+        }
+      }
+    }
+
+    console.log(`✅ ${strategy} upgrade completed!`);
+
+    // Verify upgrade
+    console.log("\n🧪 Verifying upgrade...");
+    const newVerifier = await proxy.verifier();
+    const newTotalSupply = await proxy.totalSupply();
+    const newMaxSupply = await proxy.cap();
+    const newImplementation = await proxy.implementation();
+
+    console.log(`✅ Verification successful!`);
+    console.log(`   Implementation: ${newImplementation}`);
+    console.log(`   Verifier: ${newVerifier}`);
+    console.log(`   Total Supply: ${ethers.formatEther(newTotalSupply)} 1P`);
+    console.log(`   Max Supply: ${ethers.formatEther(newMaxSupply)} 1P`);
+
     console.log("\n📊 Upgrade Summary:");
-    console.log(`   Proxy Address: ${currentDeployment.address}`);
-    console.log(`   Old Implementation: ${currentImplDeployment.address}`);
-    console.log(`   New Implementation: ${newImplDeployment.address}`);
-    console.log(`   Network: ${hre.network.name}`);
+    console.log(`   Proxy Address: ${proxyAddress}`);
+    console.log(`   Old Implementation: ${currentImpl}`);
+    console.log(`   New Implementation: ${newImplAddress}`);
+    console.log(`   Strategy: ${strategy}`);
+    console.log(`   Network: ${network}`);
 
   } catch (error: any) {
-    console.error("❌ Upgrade failed:", error.message);
+    console.error(`❌ ${strategy} upgrade failed:`, error.message);
     
     if (error.message.includes("Contract source code already verified")) {
       console.log("ℹ️  This might be because the implementation is already verified");
@@ -103,76 +172,4 @@ async function main(hre: HardhatRuntimeEnvironment) {
   }
 }
 
-/**
- * Alternative upgrade method using hardhat-deploy's upgrade functionality
- */
-async function upgradeWithHardhatDeploy(hre: HardhatRuntimeEnvironment) {
-  console.log("🔄 Starting OneP contract upgrade using hardhat-deploy...\n");
-
-  const { deployments, getNamedAccounts } = hre;
-  const { deploy } = deployments;
-  const { admin } = await getNamedAccounts();
-
-  try {
-    // Deploy new implementation (hardhat-deploy upgrade method)
-    const upgradeResult = await deploy("OneP", {
-      from: admin,
-      contract: "OneP",
-      proxy: {
-        proxyContract: "OpenZeppelinTransparentProxy",
-        // Note: hardhat-deploy doesn't support upgrade flag in this version
-        // We'll use the standard upgrade method instead
-      },
-      log: true,
-    });
-
-    console.log(`✅ Upgrade completed!`);
-    console.log(`📍 Proxy address: ${upgradeResult.address}`);
-    console.log(`📍 New implementation: ${upgradeResult.implementation}`);
-
-  } catch (error: any) {
-    console.error("❌ Upgrade failed:", error.message);
-    throw error;
-  }
-}
-
-/**
- * Check upgrade compatibility
- */
-async function checkUpgradeCompatibility(hre: HardhatRuntimeEnvironment) {
-  console.log("🔍 Checking upgrade compatibility...\n");
-
-  const { deployments } = hre;
-  const { get } = deployments;
-
-  try {
-    const currentDeployment = await get("OneP");
-    const proxy = await ethers.getContractAt("OneP", currentDeployment.address);
-
-    // Check current state
-    const verifier = await proxy.verifier();
-    const totalSupply = await proxy.totalSupply();
-    const maxSupply = await proxy.cap();
-
-    console.log("✅ Current contract state:");
-    console.log(`   Verifier: ${verifier}`);
-    console.log(`   Total Supply: ${ethers.formatEther(totalSupply)} 1P`);
-    console.log(`   Max Supply: ${ethers.formatEther(maxSupply)} 1P`);
-
-    // You can add more compatibility checks here
-    console.log("✅ Contract appears to be upgradeable");
-
-  } catch (error: any) {
-    console.error("❌ Compatibility check failed:", error.message);
-    throw error;
-  }
-}
-
-// Export functions for use in other scripts
-export {
-  upgradeWithHardhatDeploy,
-  checkUpgradeCompatibility
-};
-
-// This is the main function that Hardhat will call
 export default main;
