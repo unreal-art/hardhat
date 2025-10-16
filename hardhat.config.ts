@@ -216,11 +216,22 @@ const config: _Config = {
       explorer: "https://explorer.testnet.aurora.dev",
       confirmations: 1, //bugfix: for slow
     },
+    somnia: {
+      // https://dream-rpc.somnia.network
+      url: "https://rpc.ankr.com/somnia_testnet/b538dd90abf174d5a5e91e686b9a0d2bcb80c0531c5d99fe61aa7b2a9720d453",
+      chainId: 50312,
+      saveDeployments: true,
+      accounts: PRIVATE_KEYS,
+      faucet: [""],
+      explorer: "https://shannon-explorer.somnia.network",
+      confirmations: 1, //bugfix: for slow
+    },
   },
   etherscan: {
     apiKey: {
       torusM: "empty",
       cc: "empty",
+      somnia: "empty",
       default: process.env.ETHERSCAN_API_KEY,
     },
 
@@ -249,6 +260,14 @@ const config: _Config = {
         urls: {
           apiURL: "https://creditcoin-testnet.blockscout.com/api",
           browserURL: "https://creditcoin-testnet.blockscout.com",
+        },
+      },
+      {
+        network: "somnia",
+        chainId: 50312,
+        urls: {
+          apiURL: "https://shannon-explorer.somnia.network/api",
+          browserURL: "https://shannon-explorer.somnia.network",
         },
       },
     ],
