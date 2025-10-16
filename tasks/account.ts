@@ -1,23 +1,22 @@
-import { task } from "hardhat/config"
 import "@nomicfoundation/hardhat-toolbox"
+import Wallet1 from "ethereumjs-wallet"
+import { AlchemyProvider, getBigInt } from "ethers"
+import { task } from "hardhat/config"
 import {
-  getAccount,
-  getAddress,
-  getBalance,
-  getBalanceInEther,
-  getPublicAddress,
+    getAccount,
+    getAddress,
+    getBalance,
+    getBalanceInEther,
+    getPublicAddress,
 } from "../utils/accounts"
 import { Account } from "../utils/types"
-import { AlchemyProvider, getBigInt, Wallet } from "ethers"
-import Wallet1 from "ethereumjs-wallet"
-import Bluebird from "bluebird"
-import { connectODP, connectERC, connectUnrealToken } from "../utils/web3"
+import { connectERC, connectODP, connectUnrealToken } from "../utils/web3"
 import { FundOut, Out } from "./account.d"
 import {
-  balanceOfUnreal,
-  tokenBal,
-  transferEther,
-  transferToken,
+    balanceOfUnreal,
+    tokenBal,
+    transferEther,
+    transferToken,
 } from "./helpers"
 
 // ----- Tasks -----
@@ -156,6 +155,7 @@ task("drip", "Drip any address")
       )
       out.admin.newTokenBal = await bal(fundingAccount.address)
 
+      console.log(`NETWORK=${hre.network.name}`)
       console.table(out)
     }
   )
