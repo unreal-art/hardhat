@@ -30,6 +30,12 @@ type _Network = NetworkUserConfig & {
   confirmations?: number;
   odp?: string;
   evmVersion?: string;
+  tokens?: {
+    [tokenName: string]: {
+      address: `0x${string}`;
+      faucet?: Array<string>;
+    };
+  };
 };
 
 const genesisAcc = [
@@ -110,6 +116,15 @@ const config: _Config = {
       chainId: 11155111,
       accounts: PRIVATE_KEYS,
       saveDeployments: true,
+      tokens: {
+        pyUSD: {
+          address: "0x6c3ea9036406852006290770bedfcaba0e23a0e8",
+          faucet: [
+            "https://cloud.google.com/application/web3/faucet/ethereum/sepolia/pyusd",
+            "https://faucet.paxos.com",
+          ],
+        },
+      },
     },
     torus: {
       url: "https://rpc.testnet.toruschain.com",
