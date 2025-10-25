@@ -1,56 +1,56 @@
-import "@nomicfoundation/hardhat-chai-matchers";
-import "@nomicfoundation/hardhat-ethers";
-import "@nomicfoundation/hardhat-toolbox";
-import "@typechain/hardhat";
-import * as dotenv from "dotenv";
-import "hardhat-deploy";
-import { HardhatUserConfig } from "hardhat/config";
-import * as process from "process";
+import "@nomicfoundation/hardhat-chai-matchers"
+import "@nomicfoundation/hardhat-ethers"
+import "@nomicfoundation/hardhat-toolbox"
+import "@typechain/hardhat"
+import * as dotenv from "dotenv"
+import "hardhat-deploy"
+import { HardhatUserConfig } from "hardhat/config"
+import * as process from "process"
 
-import "@nomicfoundation/hardhat-ignition-ethers";
+import "@nomicfoundation/hardhat-ignition-ethers"
 
-const ENV_FILE = process.env.CONFIG || "./.env";
+const ENV_FILE = process.env.CONFIG || "./.env"
 
-console.log(`ENV_FILE is ${ENV_FILE}`);
+console.log(`ENV_FILE is ${ENV_FILE}`)
 
-dotenv.config({ path: ENV_FILE });
+dotenv.config({ path: ENV_FILE })
 
-import { NetworkUserConfig } from "hardhat/types";
-import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts";
+import { NetworkUserConfig } from "hardhat/types"
+import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts"
 
-let NETWORK = process.env.NETWORK || "hardhat";
-const INFURA_KEY = process.env.INFURA_KEY || "";
+let NETWORK = process.env.NETWORK || "hardhat"
+const INFURA_KEY = process.env.INFURA_KEY || ""
 
 // console.log(`infura key is ${INFURA_KEY}`)
 
 type _Network = NetworkUserConfig & {
-  ws?: string;
-  faucet?: string | Array<string>;
-  explorer?: string;
-  confirmations?: number;
-  odp?: string;
-  evmVersion?: string;
+  ws?: string
+  faucet?: string | Array<string>
+  explorer?: string
+  confirmations?: number
+  odp?: string
+  evmVersion?: string
   tokens?: {
     [tokenName: string]: {
-      address: `0x${string}`;
-      faucet?: Array<string>;
-    };
-  };
-};
+      address: `0x${string}`
+      faucet?: Array<string>
+    }
+  }
+}
 
 const genesisAcc = [
   ...PRIVATE_KEYS.map((privateKey) => {
     return {
       privateKey: privateKey,
       balance: `${1000000000000000000000000n}`,
-    };
+    }
   }),
-];
+]
 
 interface _Config extends HardhatUserConfig {
   networks: {
-    [network: string]: _Network;
-  };
+    [network: string]: _Network
+  }
 }
 
 const config: _Config = {
@@ -118,7 +118,7 @@ const config: _Config = {
       saveDeployments: true,
       tokens: {
         pyUSD: {
-          address: "0x6c3ea9036406852006290770bedfcaba0e23a0e8",
+          address: "0xCaC524BcA292aaade2DF8A05cC58F0a65B1B3bB9",
           faucet: [
             "https://cloud.google.com/application/web3/faucet/ethereum/sepolia/pyusd",
             "https://faucet.paxos.com",
@@ -309,11 +309,11 @@ const config: _Config = {
     requiredConfirmations: 1,
     disableFeeBumping: false,
   },
-};
+}
 
 // config.networks.localhost = config.networks.hardhat
 
 // console.log(config)
-module.exports = config;
+module.exports = config
 
-import "./tasks";
+import "./tasks"

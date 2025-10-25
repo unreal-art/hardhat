@@ -69,6 +69,7 @@ task("drip", "Drip any address")
   .addOptionalParam("token", "The Token address defaults to Unreal")
   .setAction(async ({ account, eth, amt, nonce: startNonce, token }, hre) => {
     console.log("network", hre.network.name)
+    // console.log("token", token)
     if (!token) {
       token = (await hre.deployments.get("UnrealToken")).address
     }
