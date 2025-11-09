@@ -234,6 +234,7 @@ const config: _Config = {
     somnia: {
       // https://dream-rpc.somnia.network
       url: "https://rpc.ankr.com/somnia_testnet/b538dd90abf174d5a5e91e686b9a0d2bcb80c0531c5d99fe61aa7b2a9720d453",
+      ws: "wss://dream-rpc.somnia.network/ws",
       chainId: 50312,
       saveDeployments: true,
       accounts: PRIVATE_KEYS,
@@ -287,7 +288,7 @@ const config: _Config = {
       },
     ],
   },
-  sourcify: {
+  // sourcify: {
     // Disabled by default
     // Doesn't need an API key
     enabled: true,
