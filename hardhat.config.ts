@@ -2,6 +2,7 @@ import "@nomicfoundation/hardhat-chai-matchers"
 import "@nomicfoundation/hardhat-ethers"
 import "@nomicfoundation/hardhat-toolbox"
 import "@typechain/hardhat"
+// import "@parity/hardhat-polkadot"
 import * as dotenv from "dotenv"
 import "hardhat-deploy"
 import { HardhatUserConfig } from "hardhat/config"
@@ -30,6 +31,7 @@ type _Network = NetworkUserConfig & {
   confirmations?: number
   odp?: string
   evmVersion?: string
+  polkavm?: boolean
   tokens?: {
     [tokenName: string]: {
       address: `0x${string}`
@@ -242,12 +244,28 @@ const config: _Config = {
       explorer: "https://shannon-explorer.somnia.network",
       confirmations: 1, //bugfix: for slow
     },
+
+    // Polkadot EVM (Polkadot Hub / Paseo Testnet)
+    polkadot: {
+      polkavm: true,
+      url: "https://testnet-passet-hub-eth-rpc.polkadot.io",
+      ws: "wss://testnet-passet-hub-eth-rpc.polkadot.io",
+      chainId: 420420422,
+      accounts: PRIVATE_KEYS,
+      saveDeployments: true,
+      explorer: "https://blockscout-passet-hub.parity-testnet.parity.io/",
+      faucet: "https://faucet.polkadot.io/?parachain=1111",
+      confirmations: 1,
+
+      // https://docs.polkadot.com/develop/smart-contracts/json-rpc-apis/
+    },
   },
   etherscan: {
     apiKey: {
       torusM: "empty",
       cc: "empty",
       somnia: "empty",
+      polkadot: "empty",
       default: process.env.ETHERSCAN_API_KEY,
     },
 
@@ -286,15 +304,23 @@ const config: _Config = {
           browserURL: "https://shannon-explorer.somnia.network",
         },
       },
+      {
+        network: "polkadot",
+        chainId: 420420422,
+        urls: {
+          apiURL: "https://blockscout-passet-hub.parity-testnet.parity.io/api",
+          browserURL: "https://blockscout-passet-hub.parity-testnet.parity.io",
+        },
+      },
     ],
   },
   // sourcify: {
-    // Disabled by default
-    // Doesn't need an API key
-    enabled: true,
-    apiUrl: "https://sourcify.dev/server",
-    browserUrl: "https://repo.sourcify.dev",
-  },
+  //   // Disabled by default
+  //   // Doesn't need an API key
+  //   enabled: true,
+  //   apiUrl: "https://sourcify.dev/server",
+  //   browserUrl: "https://repo.sourcify.dev",
+  // },
   typechain: {
     outDir: "typechain-types",
     target: "ethers-v6",
