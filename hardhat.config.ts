@@ -245,7 +245,18 @@ const config: _Config = {
       confirmations: 1, //bugfix: for slow
     },
 
-    // Polkadot EVM (Polkadot Hub / Paseo Testnet)
+    citrea: {
+      type: "http",
+      url: "https://rpc.testnet.citrea.xyz",
+      ws: "",
+      chainId: 5115,
+      accounts: PRIVATE_KEYS,
+      saveDeployments: true,
+      explorer: "https://explorer.testnet.citrea.xyz/",
+      faucet: ["https://citrea.xyz/faucet"],
+      confirmations: 4,
+      custom: {},
+    },
     polkadot: {
       polkavm: true,
       url: "https://testnet-passet-hub-eth-rpc.polkadot.io",
