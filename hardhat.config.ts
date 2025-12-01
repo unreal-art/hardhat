@@ -1,56 +1,58 @@
-import "@nomicfoundation/hardhat-chai-matchers"
-import "@nomicfoundation/hardhat-ethers"
-import "@nomicfoundation/hardhat-toolbox"
-import "@typechain/hardhat"
-import * as dotenv from "dotenv"
-import "hardhat-deploy"
-import { HardhatUserConfig } from "hardhat/config"
-import * as process from "process"
+import "@nomicfoundation/hardhat-chai-matchers";
+import "@nomicfoundation/hardhat-ethers";
+import "@nomicfoundation/hardhat-toolbox";
+import "@typechain/hardhat";
+// import "@parity/hardhat-polkadot"
+import * as dotenv from "dotenv";
+import "hardhat-deploy";
+import { HardhatUserConfig } from "hardhat/config";
+import * as process from "process";
 
-import "@nomicfoundation/hardhat-ignition-ethers"
+import "@nomicfoundation/hardhat-ignition-ethers";
 
-const ENV_FILE = process.env.CONFIG || "./.env"
+const ENV_FILE = process.env.CONFIG || "./.env";
 
-console.log(`ENV_FILE is ${ENV_FILE}`)
+console.log(`ENV_FILE is ${ENV_FILE}`);
 
-dotenv.config({ path: ENV_FILE })
+dotenv.config({ path: ENV_FILE });
 
-import { NetworkUserConfig } from "hardhat/types"
-import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts"
+import { NetworkUserConfig } from "hardhat/types";
+import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts";
 
-let NETWORK = process.env.NETWORK || "hardhat"
-const INFURA_KEY = process.env.INFURA_KEY || ""
+let NETWORK = process.env.NETWORK || "hardhat";
+const INFURA_KEY = process.env.INFURA_KEY || "";
 
 // console.log(`infura key is ${INFURA_KEY}`)
 
 type _Network = NetworkUserConfig & {
-  ws?: string
-  faucet?: string | Array<string>
-  explorer?: string
-  confirmations?: number
-  odp?: string
-  evmVersion?: string
+  ws?: string;
+  faucet?: string | Array<string>;
+  explorer?: string;
+  confirmations?: number;
+  odp?: string;
+  evmVersion?: string;
+  polkavm?: boolean;
   tokens?: {
     [tokenName: string]: {
-      address: `0x${string}`
-      faucet?: Array<string>
-    }
-  }
-}
+      address: `0x${string}`;
+      faucet?: Array<string>;
+    };
+  };
+};
 
 const genesisAcc = [
   ...PRIVATE_KEYS.map((privateKey) => {
     return {
       privateKey: privateKey,
       balance: `${1000000000000000000000000n}`,
-    }
+    };
   }),
-]
+];
 
 interface _Config extends HardhatUserConfig {
   networks: {
-    [network: string]: _Network
-  }
+    [network: string]: _Network;
+  };
 }
 
 const config: _Config = {
@@ -242,12 +244,39 @@ const config: _Config = {
       explorer: "https://shannon-explorer.somnia.network",
       confirmations: 1, //bugfix: for slow
     },
+
+    citrea: {
+      type: "http",
+      url: "https://rpc.testnet.citrea.xyz",
+      ws: "",
+      chainId: 5115,
+      accounts: PRIVATE_KEYS,
+      saveDeployments: true,
+      explorer: "https://explorer.testnet.citrea.xyz/",
+      faucet: ["https://citrea.xyz/faucet"],
+      confirmations: 4,
+      custom: {},
+    },
+    polkadot: {
+      polkavm: true,
+      url: "https://testnet-passet-hub-eth-rpc.polkadot.io",
+      ws: "wss://testnet-passet-hub-eth-rpc.polkadot.io",
+      chainId: 420420422,
+      accounts: PRIVATE_KEYS,
+      saveDeployments: true,
+      explorer: "https://blockscout-passet-hub.parity-testnet.parity.io/",
+      faucet: "https://faucet.polkadot.io/?parachain=1111",
+      confirmations: 1,
+
+      // https://docs.polkadot.com/develop/smart-contracts/json-rpc-apis/
+    },
   },
   etherscan: {
     apiKey: {
       torusM: "empty",
       cc: "empty",
       somnia: "empty",
+      polkadot: "empty",
       default: process.env.ETHERSCAN_API_KEY,
     },
 
@@ -286,15 +315,23 @@ const config: _Config = {
           browserURL: "https://shannon-explorer.somnia.network",
         },
       },
+      {
+        network: "polkadot",
+        chainId: 420420422,
+        urls: {
+          apiURL: "https://blockscout-passet-hub.parity-testnet.parity.io/api",
+          browserURL: "https://blockscout-passet-hub.parity-testnet.parity.io",
+        },
+      },
     ],
   },
   // sourcify: {
-    // Disabled by default
-    // Doesn't need an API key
-    enabled: true,
-    apiUrl: "https://sourcify.dev/server",
-    browserUrl: "https://repo.sourcify.dev",
-  },
+  //   // Disabled by default
+  //   // Doesn't need an API key
+  //   enabled: true,
+  //   apiUrl: "https://sourcify.dev/server",
+  //   browserUrl: "https://repo.sourcify.dev",
+  // },
   typechain: {
     outDir: "typechain-types",
     target: "ethers-v6",
@@ -310,11 +347,11 @@ const config: _Config = {
     requiredConfirmations: 1,
     disableFeeBumping: false,
   },
-}
+};
 
 // config.networks.localhost = config.networks.hardhat
 
 // console.log(config)
-module.exports = config
+module.exports = config;
 
-import "./tasks"
+import "./tasks";

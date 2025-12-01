@@ -25,7 +25,7 @@
     "build": "hardhat compile",
     "postbuild": "hardhat typechain",
     "build1": "export TS_NODE_TRANSPILE_ONLY=1 && echo 'run when hardhat fails due to insufficient types' && hardhat compile",
-    "clean": "hardhat clean && rm -rf deployments",
+    "clean": "hardhat clean && trash deployments",
     "hardhat:local": "hardhat node",
     "pkey1": "hardhat pkey ",
     "pret": "rimraf deployments/localhost && pnpm run deploy localhost && pnpm fund localhost",
