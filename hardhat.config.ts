@@ -9,6 +9,7 @@ import { HardhatUserConfig } from "hardhat/config";
 import * as process from "process";
 
 import "@nomicfoundation/hardhat-ignition-ethers";
+import "@openzeppelin/hardhat-upgrades";
 
 const ENV_FILE = process.env.CONFIG || "./.env";
 
